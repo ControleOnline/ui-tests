@@ -147,6 +147,13 @@ export default {
   actions: {
     async loadIndex({ commit }, options = {}) {
       const keepCurrent = options?.keepCurrent === true;
+      const apiBaseUrl = options?.apiBaseUrl;
+      const config = getApiConfig(apiBaseUrl);
+      const apiClient = options?.api || {};
+      const loadSmokeIndexFn =
+        typeof apiClient.loadSmokeIndex === 'function'
+          ? apiClient.loadSmokeIndex
+          : loadSmokeIndex;
       const requestId = ++loadRequestId;
 
       if (keepCurrent) {
@@ -166,7 +173,7 @@ export default {
       commit('SET_RUN_MESSAGE', '');
 
       try {
-        const index = normalizeItem(await loadSmokeIndex());
+        const index = normalizeItem(await loadSmokeIndexFn(config));
 
         if (requestId !== loadRequestId) {
           return index;
@@ -203,7 +210,14 @@ export default {
         }
       }
     },
-    async runAllTests({ commit, dispatch }) {
+    async runAllTests({ commit, dispatch }, options = {}) {
+      const apiBaseUrl = options?.apiBaseUrl;
+      const config = getApiConfig(apiBaseUrl);
+      const apiClient = options?.api || {};
+      const triggerSmokeRunFn =
+        typeof apiClient.triggerSmokeRun === 'function'
+          ? apiClient.triggerSmokeRun
+          : triggerSmokeRun;
       const requestId = ++runRequestId;
 
       commit('SET_ISSAVING', true);
@@ -211,14 +225,17 @@ export default {
       commit('SET_RUN_MESSAGE', '');
 
       try {
-        const response = await triggerSmokeRun();
+        const response = await triggerSmokeRunFn(config);
 
         if (requestId !== runRequestId) {
           return response;
         }
 
         commit('SET_RUN_MESSAGE', readRunMessage(response));
-        await dispatch('loadIndex', { keepCurrent: true });
+        await dispatch('loadIndex', {
+          keepCurrent: true,
+          apiBaseUrl: config.apiBaseUrl,
+        });
         return response;
       } catch (error) {
         if (requestId !== runRequestId) {
@@ -237,12 +254,17 @@ export default {
       const artifact = payload?.artifact || payload;
       const apiBaseUrl = payload?.apiBaseUrl;
       const config = getApiConfig(apiBaseUrl);
+      const apiClient = payload?.api || {};
+      const loadArtifactBlobFn =
+        typeof apiClient.loadArtifactBlob === 'function'
+          ? apiClient.loadArtifactBlob
+          : loadArtifactBlob;
 
       if (!artifact || typeof artifact !== 'object') {
         throw new Error('Artefato inválido.');
       }
 
-      return await loadArtifactBlob(config, artifact);
+      return await loadArtifactBlobFn(config, artifact);
     },
     clearFeedback({ commit }) {
       commit('SET_ERROR', '');

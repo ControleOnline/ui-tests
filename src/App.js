@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useStore } from '@store';
 import LoginScreen from './LoginScreen';
+import { loadArtifactBlob, loadSmokeIndex, triggerSmokeRun } from './lib/api';
 import { getSmokeApiConfig } from './lib/config';
 import { formatCount, formatDateTime, formatPercent } from './lib/format';
 import { createAuthenticatedFetch } from './lib/fetchAuth';
@@ -546,8 +547,11 @@ export function SmokeDashboard({ apiBaseUrl }) {
 
   useEffect(() => {
     clearPreview();
-    void testsActions.loadIndex().catch(() => {});
-  }, [clearPreview, testsActions]);
+    void testsActions.loadIndex({
+      apiBaseUrl,
+      api: { loadSmokeIndex },
+    }).catch(() => {});
+  }, [apiBaseUrl, clearPreview, testsActions]);
 
   useEffect(() => {
     return () => {
@@ -612,7 +616,11 @@ export function SmokeDashboard({ apiBaseUrl }) {
     setPreview({ artifact, objectUrl: '' });
 
     try {
-      const blob = await testsActions.loadArtifact({ artifact, apiBaseUrl });
+      const blob = await testsActions.loadArtifact({
+        artifact,
+        apiBaseUrl,
+        api: { loadArtifactBlob },
+      });
       const objectUrl = URL.createObjectURL(blob);
 
       previewUrlRef.current = objectUrl;
@@ -631,7 +639,10 @@ export function SmokeDashboard({ apiBaseUrl }) {
     clearPreview();
 
     try {
-      await testsActions.runAllTests();
+      await testsActions.runAllTests({
+        apiBaseUrl,
+        api: { triggerSmokeRun },
+      });
     } catch (error) {
       // o store já registra o erro; evitamos rejeição não tratada.
     }
@@ -710,7 +721,10 @@ export function SmokeDashboard({ apiBaseUrl }) {
               accessibilityRole="button"
               onPress={() => {
                 clearPreview();
-                void testsActions.loadIndex().catch(() => {});
+                void testsActions.loadIndex({
+                  apiBaseUrl,
+                  api: { loadSmokeIndex },
+                }).catch(() => {});
               }}
               style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}
             >
@@ -776,7 +790,11 @@ export function SmokeDashboard({ apiBaseUrl }) {
                 accessibilityRole="button"
                 onPress={() => {
                   clearPreview();
-                  void testsActions.loadIndex({ keepCurrent: true }).catch(() => {});
+                  void testsActions.loadIndex({
+                    keepCurrent: true,
+                    apiBaseUrl,
+                    api: { loadSmokeIndex },
+                  }).catch(() => {});
                 }}
                 disabled={refreshing}
                 style={({ pressed }) => [

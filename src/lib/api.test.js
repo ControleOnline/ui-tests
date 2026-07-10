@@ -1,11 +1,4 @@
-import { api as uiCommonApi } from '@controleonline/ui-common/src/api';
 import { buildApiUrl, loadArtifactBlob, loadSmokeIndex, triggerSmokeRun } from './api';
-
-jest.mock('@controleonline/ui-common/src/api', () => ({
-  api: {
-    fetch: jest.fn(),
-  },
-}));
 
 jest.mock('./session', () => ({
   getStoredSessionApiKey: jest.fn(() => 'secret'),
@@ -23,13 +16,26 @@ describe('api helpers', () => {
     );
   });
 
-  it('loads the smoke index through ui-common', async () => {
+  it('loads the smoke index from the configured API base', async () => {
     const json = { suites: [], summary: {}, status: 'idle' };
-    uiCommonApi.fetch.mockResolvedValue(json);
 
-    await expect(loadSmokeIndex()).resolves.toEqual(json);
+    global.fetch.mockResolvedValue({
+      ok: true,
+      text: jest.fn().mockResolvedValue(JSON.stringify(json)),
+    });
 
-    expect(uiCommonApi.fetch).toHaveBeenCalledWith('/tests/index.json', {});
+    await expect(
+      loadSmokeIndex({
+        apiBaseUrl: 'https://api.example.test',
+      }),
+    ).resolves.toEqual(json);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://api.example.test/tests/index.json',
+      expect.objectContaining({
+        headers: expect.any(Headers),
+      }),
+    );
   });
 
   it('loads artifacts as blobs', async () => {
@@ -64,18 +70,29 @@ describe('api helpers', () => {
     expect(headers.get('X-API-KEY')).toBe('secret');
   });
 
-  it('triggers a smoke run through ui-common', async () => {
+  it('triggers a smoke run through the configured API base', async () => {
     const payload = {
       status: 'running',
       progress: 15,
       message: 'Executando smoke tests.',
     };
-    uiCommonApi.fetch.mockResolvedValue(payload);
 
-    await expect(triggerSmokeRun()).resolves.toEqual(payload);
-
-    expect(uiCommonApi.fetch).toHaveBeenCalledWith('/tests/run', {
-      method: 'POST',
+    global.fetch.mockResolvedValue({
+      ok: true,
+      text: jest.fn().mockResolvedValue(JSON.stringify(payload)),
     });
+
+    await expect(
+      triggerSmokeRun({
+        apiBaseUrl: 'https://api.example.test',
+      }),
+    ).resolves.toEqual(payload);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://api.example.test/tests/run',
+      expect.objectContaining({
+        method: 'POST',
+      }),
+    );
   });
 });

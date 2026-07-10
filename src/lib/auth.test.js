@@ -1,8 +1,8 @@
 import { loginToApi } from './auth';
-import { signIn as signInAction } from '@controleonline/ui-login/src/store/modules/auth/actions';
+import { getAllStores } from '@store';
 
-jest.mock('@controleonline/ui-login/src/store/modules/auth/actions', () => ({
-  signIn: jest.fn(),
+jest.mock('@store', () => ({
+  getAllStores: jest.fn(),
 }));
 
 describe('loginToApi', () => {
@@ -10,13 +10,21 @@ describe('loginToApi', () => {
     jest.clearAllMocks();
   });
 
-  it('delegates to ui-login signIn action', async () => {
+  it('delegates to the auth store signIn action', async () => {
     const session = {
       id: 15,
       active: true,
       api_key: 'token-123',
     };
-    signInAction.mockResolvedValue(session);
+    const signIn = jest.fn().mockResolvedValue(session);
+
+    getAllStores.mockReturnValue({
+      auth: {
+        actions: {
+          signIn,
+        },
+      },
+    });
 
     await expect(
       loginToApi({
@@ -25,12 +33,9 @@ describe('loginToApi', () => {
       }),
     ).resolves.toEqual(session);
 
-    expect(signInAction).toHaveBeenCalledWith(
-      { commit: expect.any(Function) },
-      {
-        username: 'user@example.test',
-        password: '123456',
-      },
-    );
+    expect(signIn).toHaveBeenCalledWith({
+      username: 'user@example.test',
+      password: '123456',
+    });
   });
 });

@@ -1,4 +1,4 @@
-import auth from '@controleonline/ui-login/src/store/modules/auth';
+import auth from './auth';
 import people from './people';
 import tests from './tests';
 import theme from './theme';

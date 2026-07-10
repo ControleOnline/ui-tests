@@ -221,9 +221,11 @@ describe('SmokeDashboard', () => {
 
     await screen.findByRole('button', { name: 'Browser Smoke' });
 
-    expect(mockedLoadSmokeIndex).toHaveBeenCalledWith({
-      apiBaseUrl: authConfig.apiBaseUrl,
-    });
+    expect(mockedLoadSmokeIndex).toHaveBeenCalledWith(
+      expect.objectContaining({
+        apiBaseUrl: authConfig.apiBaseUrl,
+      }),
+    );
 
     expect(screen.getAllByText('Smoke Atlas').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Tipos').length).toBeGreaterThan(0);
@@ -293,9 +295,11 @@ describe('SmokeDashboard', () => {
     fireEvent.press(screen.getByRole('button', { name: 'Refazer todos os testes' }));
 
     await waitFor(() => {
-      expect(mockedTriggerSmokeRun).toHaveBeenCalledWith({
-        apiBaseUrl: authConfig.apiBaseUrl,
-      });
+      expect(mockedTriggerSmokeRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          apiBaseUrl: authConfig.apiBaseUrl,
+        }),
+      );
     });
 
     await waitFor(() => {
