@@ -1,0 +1,42 @@
+name: Deploy Smoke Atlas
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      - name: Creating Config
+        run: |
+          mkdir -p config
+          cat > ./config/env.local.js <<'EOF'
+          const env = {
+            API_ENTRYPOINT: '${{ secrets.API_ENTRYPOINT }}',
+            DOMAIN: '${{ secrets.DOMAIN }}',
+            HTACCESS_USER: '${{ secrets.HTACCESS_USER }}',
+            HTACCESS_PASSWORD: '${{ secrets.HTACCESS_PASSWORD }}'
+          };
+          module.exports = { env };
+          EOF
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+      - name: Fix Expo Dependencies
+        run: npx expo install --fix
+      - name: Build
+        env:
+          EXPO_NO_TELEMETRY: "1"
+        run: npx expo export --platform web --output-dir dist
+      - name: Deploy
+        uses: locaweb/ftp-deploy@1.0.0
+        with:
+          host: ${{ secrets.FTP_HOST }}
+          user: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          localDir: "./dist"
+          remoteDir: "~/public_html"
+          forceSsl: false

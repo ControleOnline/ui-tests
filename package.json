@@ -1,0 +1,44 @@
+{
+  "name": "@controleonline/ui-tests",
+  "version": "1.0.0",
+  "author": "Controle Online",
+  "description": "Controle Online Tests UI Component",
+  "license": "MIT",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "expo start",
+    "start:clear": "expo start -c",
+    "web": "expo start --web",
+    "build": "expo export --platform web",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "@controleonline/ui-common": "^1.2.70",
+    "@controleonline/ui-login": "^1.0.97",
+    "axios": "^1.18.1",
+    "expo": "~54.0.34",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-web": "^0.21.0"
+  },
+  "devDependencies": {
+    "@babel/core": "*",
+    "@testing-library/react-native": "^13.3.3",
+    "babel-plugin-module-resolver": "*",
+    "babel-preset-expo": "~54.0.10",
+    "jest": "^29.7.0",
+    "jest-expo": "^54.0.17",
+    "react-test-renderer": "^19.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ControleOnline/ui-tests.git"
+  },
+  "bugs": "",
+  "homepage": "https://www.controleonline.com/devs/plugins",
+  "publishConfig": {
+    "access": "public"
+  }
+}
