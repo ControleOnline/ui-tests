@@ -1,5 +1,5 @@
-import { loadArtifactBlob, loadSmokeIndex, triggerSmokeRun } from '../lib/api';
-import { getSmokeApiConfig } from '../lib/config';
+import { api as commonApi } from '@controleonline/ui-common/src/api';
+import { getSmokeApiConfig } from '../smokeConfig';
 
 const EMPTY_SUMMARY = {
   types: { total: 0, passed: 0, failed: 0 },
@@ -149,11 +149,11 @@ export default {
       const keepCurrent = options?.keepCurrent === true;
       const apiBaseUrl = options?.apiBaseUrl;
       const config = getApiConfig(apiBaseUrl);
-      const apiClient = options?.api || {};
+      const apiClient = options?.api || commonApi;
       const loadSmokeIndexFn =
         typeof apiClient.loadSmokeIndex === 'function'
           ? apiClient.loadSmokeIndex
-          : loadSmokeIndex;
+          : commonApi.loadSmokeIndex;
       const requestId = ++loadRequestId;
 
       if (keepCurrent) {
@@ -213,11 +213,11 @@ export default {
     async runAllTests({ commit, dispatch }, options = {}) {
       const apiBaseUrl = options?.apiBaseUrl;
       const config = getApiConfig(apiBaseUrl);
-      const apiClient = options?.api || {};
+      const apiClient = options?.api || commonApi;
       const triggerSmokeRunFn =
         typeof apiClient.triggerSmokeRun === 'function'
           ? apiClient.triggerSmokeRun
-          : triggerSmokeRun;
+          : commonApi.triggerSmokeRun;
       const requestId = ++runRequestId;
 
       commit('SET_ISSAVING', true);
@@ -254,11 +254,11 @@ export default {
       const artifact = payload?.artifact || payload;
       const apiBaseUrl = payload?.apiBaseUrl;
       const config = getApiConfig(apiBaseUrl);
-      const apiClient = payload?.api || {};
+      const apiClient = payload?.api || commonApi;
       const loadArtifactBlobFn =
         typeof apiClient.loadArtifactBlob === 'function'
           ? apiClient.loadArtifactBlob
-          : loadArtifactBlob;
+          : commonApi.loadArtifactBlob;
 
       if (!artifact || typeof artifact !== 'object') {
         throw new Error('Artefato inválido.');

@@ -10,11 +10,12 @@ import {
   View,
 } from 'react-native';
 import { useStore } from '@store';
+import Formatter from '@controleonline/ui-common/src/utils/formatter';
 import LoginScreen from './LoginScreen';
-import { loadArtifactBlob, loadSmokeIndex, triggerSmokeRun } from './lib/api';
-import { getSmokeApiConfig } from './lib/config';
-import { formatCount, formatDateTime, formatPercent } from './lib/format';
-import { createAuthenticatedFetch } from './lib/fetchAuth';
+
+const { formatCount, formatDateTime } = Formatter;
+const formatPercent = (value) =>
+  Formatter.formatPercent(Math.max(0, Math.min(100, Math.round(Number(value) || 0))));
 
 function statusTone(status) {
   switch (status) {
@@ -498,7 +499,7 @@ function TestAccordion({
   );
 }
 
-export function SmokeDashboard({ apiBaseUrl }) {
+export function SmokeDashboard() {
   const testsStore = useStore('tests');
   const testsState = testsStore.getters;
   const testsActions = testsStore.actions;
@@ -547,11 +548,8 @@ export function SmokeDashboard({ apiBaseUrl }) {
 
   useEffect(() => {
     clearPreview();
-    void testsActions.loadIndex({
-      apiBaseUrl,
-      api: { loadSmokeIndex },
-    }).catch(() => {});
-  }, [apiBaseUrl, clearPreview, testsActions]);
+    void testsActions.loadIndex().catch(() => {});
+  }, [clearPreview, testsActions]);
 
   useEffect(() => {
     return () => {
@@ -618,8 +616,6 @@ export function SmokeDashboard({ apiBaseUrl }) {
     try {
       const blob = await testsActions.loadArtifact({
         artifact,
-        apiBaseUrl,
-        api: { loadArtifactBlob },
       });
       const objectUrl = URL.createObjectURL(blob);
 
@@ -639,10 +635,7 @@ export function SmokeDashboard({ apiBaseUrl }) {
     clearPreview();
 
     try {
-      await testsActions.runAllTests({
-        apiBaseUrl,
-        api: { triggerSmokeRun },
-      });
+      await testsActions.runAllTests();
     } catch (error) {
       // o store já registra o erro; evitamos rejeição não tratada.
     }
@@ -721,10 +714,7 @@ export function SmokeDashboard({ apiBaseUrl }) {
               accessibilityRole="button"
               onPress={() => {
                 clearPreview();
-                void testsActions.loadIndex({
-                  apiBaseUrl,
-                  api: { loadSmokeIndex },
-                }).catch(() => {});
+                void testsActions.loadIndex().catch(() => {});
               }}
               style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}
             >
@@ -790,11 +780,7 @@ export function SmokeDashboard({ apiBaseUrl }) {
                 accessibilityRole="button"
                 onPress={() => {
                   clearPreview();
-                  void testsActions.loadIndex({
-                    keepCurrent: true,
-                    apiBaseUrl,
-                    api: { loadSmokeIndex },
-                  }).catch(() => {});
+                  void testsActions.loadIndex({ keepCurrent: true }).catch(() => {});
                 }}
                 disabled={refreshing}
                 style={({ pressed }) => [
@@ -1024,32 +1010,9 @@ function Hero({ title, subtitle, status, message, generatedAt, lastRunAt, progre
 }
 
 export default function App() {
-  const config = getSmokeApiConfig();
   const authStore = useStore('auth');
   const authState = authStore.getters;
   const authActions = authStore.actions;
-
-  useEffect(() => {
-    const hasHtaccess =
-      config.apiBaseUrl !== '' &&
-      config.htaccessUser !== '' &&
-      config.htaccessPassword !== '';
-
-    if (!hasHtaccess || typeof globalThis.fetch !== 'function') {
-      return undefined;
-    }
-
-    const previousFetch = globalThis.fetch;
-    globalThis.fetch = createAuthenticatedFetch(previousFetch.bind(globalThis), {
-      apiBaseUrl: config.apiBaseUrl,
-      htaccessUser: config.htaccessUser,
-      htaccessPassword: config.htaccessPassword,
-    });
-
-    return () => {
-      globalThis.fetch = previousFetch;
-    };
-  }, [config.apiBaseUrl, config.htaccessUser, config.htaccessPassword]);
 
   useEffect(() => {
     void authActions.restoreSession().catch(() => {});
@@ -1071,9 +1034,7 @@ export default function App() {
   }
 
   return (
-    <SmokeDashboard
-      apiBaseUrl={config.apiBaseUrl}
-    />
+    <SmokeDashboard />
   );
 }
 
