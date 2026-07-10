@@ -34,6 +34,10 @@ if (typeof globalThis.sessionStorage === 'undefined') {
   globalThis.sessionStorage = createStorageMock();
 }
 
+if (typeof globalThis.__DEV__ === 'undefined') {
+  globalThis.__DEV__ = true;
+}
+
 if (typeof URL.createObjectURL !== 'function') {
   URL.createObjectURL = () => 'blob:mock';
 }

@@ -9,10 +9,17 @@ const smokeConfig = {
 };
 
 jest.mock('react-native', () => {
-  const actual = jest.requireActual('react-native');
-
   return {
-    ...actual,
+    ActivityIndicator: 'ActivityIndicator',
+    Image: 'Image',
+    Pressable: 'Pressable',
+    ScrollView: 'ScrollView',
+    Text: 'Text',
+    View: 'View',
+    StyleSheet: {
+      create: (styles) => styles,
+      flatten: (styles) => styles,
+    },
     useWindowDimensions: () => ({
       width: 1280,
       height: 800,
@@ -345,7 +352,6 @@ async function pressButton(label) {
 
 describe('SmokeDashboard', () => {
   beforeEach(() => {
-    jest.resetModules();
     jest.clearAllMocks();
     loadSubject();
     renderedTree = null;
