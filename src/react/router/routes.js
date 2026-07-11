@@ -13,13 +13,13 @@ const testsRoutes = [
   {
     name: 'SmokeTestsPage',
     component: SmokeTestsPage,
-    path: 'tests',
+    path: 'smoke-tests-playground',
     options: testsRouteOptions,
   },
   {
     name: 'TestsPlaygroundPage',
     component: SmokeTestsPage,
-    path: 'tests',
+    path: 'tests-playground',
     options: testsRouteOptions,
   },
 ];
