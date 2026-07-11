@@ -685,7 +685,7 @@ export function SmokeDashboard() {
           <View style={styles.headerActions}>
             <View style={styles.headerMetaStack}>
               <Badge tone="idle" label="Carregando" />
-              <Text style={styles.headerMetaText}>Buscando o último index.json disponível.</Text>
+              <Text style={styles.headerMetaText}>Buscando o último índice disponível.</Text>
             </View>
           </View>
         </View>

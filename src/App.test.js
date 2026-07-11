@@ -235,7 +235,7 @@ function createIndexFixture() {
         links: { report: '/tests/artifacts/phpunit-unit/report.xml' },
       },
     ],
-    links: { self: '/tests/index.json', artifacts: '/tests/artifacts' },
+    links: { self: '/tests', artifacts: '/tests/artifacts' },
   };
 }
 
