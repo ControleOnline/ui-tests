@@ -9,3 +9,4 @@
 - O índice público chega com `types[]` e `suites[]`; a interface deve separar browser smoke, phpunit e outros tipos.
 - O dashboard continua read-only; a execução dos testes fica no backend.
 - Sempre manter a UI dividida em blocos pequenos e reutilizáveis.
+- `ui-tests` é um módulo plugável. Não adicionar `app.json`, tela local de login ou bootstrap próprio de sessão aqui; a autenticação e a montagem da entrada ficam no shell/`ui-login` do host.

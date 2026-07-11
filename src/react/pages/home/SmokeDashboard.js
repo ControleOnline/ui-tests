@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useStore } from '@store';
 import Formatter from '@controleonline/ui-common/src/utils/formatter';
-import LoginScreen from './LoginScreen';
 
 const { formatCount, formatDateTime } = Formatter;
 const formatPercent = (value) =>
@@ -1006,35 +1005,6 @@ function Hero({ title, subtitle, status, message, generatedAt, lastRunAt, progre
         </Pressable>
       </View>
     </View>
-  );
-}
-
-export default function App() {
-  const authStore = useStore('auth');
-  const authState = authStore.getters;
-  const authActions = authStore.actions;
-
-  useEffect(() => {
-    void authActions.restoreSession().catch(() => {});
-  }, [authActions]);
-
-  if (authState.sessionChecked !== true) {
-    return (
-      <SmokeShell>
-        <View style={styles.loadingAuth}>
-          <ActivityIndicator color="#7dd3fc" />
-          <Text style={styles.loadingAuthText}>Carregando sessão...</Text>
-        </View>
-      </SmokeShell>
-    );
-  }
-
-  if (!authState.isLogged) {
-    return <LoginScreen />;
-  }
-
-  return (
-    <SmokeDashboard />
   );
 }
 

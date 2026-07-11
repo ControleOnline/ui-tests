@@ -28,7 +28,145 @@ jest.mock('react-native', () => {
     }),
   };
 });
-jest.mock('./LoginScreen', () => 'LoginScreen');
+jest.mock('@store', () => {
+  const React = require('react');
+  const {api} = jest.requireMock('@controleonline/ui-common/src/api');
+
+  const listeners = new Set();
+
+  const initialState = () => ({
+    item: null,
+    error: null,
+    isLoading: true,
+    refreshing: false,
+    isSaving: false,
+    runMessage: '',
+    runError: '',
+  });
+
+  let state = initialState();
+  let snapshot = null;
+
+  const syncSnapshot = () => {
+    snapshot = {
+      getters: state,
+      actions,
+    };
+  };
+
+  const emit = () => {
+    syncSnapshot();
+    listeners.forEach((listener) => listener());
+  };
+
+  const setState = (patch) => {
+    state = {
+      ...state,
+      ...patch,
+    };
+    emit();
+  };
+
+  const actions = {
+    async loadIndex(options = {}) {
+      const keepCurrent = options.keepCurrent === true;
+
+      setState({
+        isLoading: !keepCurrent,
+        refreshing: keepCurrent,
+        error: keepCurrent ? state.error : null,
+        runMessage: keepCurrent ? state.runMessage : '',
+        runError: keepCurrent ? state.runError : '',
+      });
+
+      try {
+        const index = await api.loadSmokeIndex(smokeConfig);
+
+        setState({
+          item: index,
+          error: null,
+          isLoading: false,
+          refreshing: false,
+        });
+
+        return index;
+      } catch (error) {
+        setState({
+          item: keepCurrent ? state.item : null,
+          error:
+            error instanceof Error && error.message.trim() !== ''
+              ? error.message
+              : 'Falha ao consultar o índice publicado.',
+          isLoading: false,
+          refreshing: false,
+        });
+
+        throw error;
+      }
+    },
+    async loadArtifact({artifact}) {
+      return api.loadArtifactBlob(smokeConfig, artifact);
+    },
+    async runAllTests() {
+      setState({
+        isSaving: true,
+        runMessage: '',
+        runError: '',
+      });
+
+      try {
+        const response = await api.triggerSmokeRun(smokeConfig);
+
+        setState({
+          isSaving: false,
+          runMessage:
+            response && typeof response === 'object' && String(response.message || '').trim() !== ''
+              ? String(response.message).trim()
+              : 'Smoke tests disparados com sucesso.',
+        });
+
+        await actions.loadIndex({keepCurrent: true});
+
+        return response;
+      } catch (error) {
+        setState({
+          isSaving: false,
+          runError:
+            error instanceof Error && error.message.trim() !== ''
+              ? error.message
+              : 'Falha ao disparar a execução dos smoke tests.',
+        });
+
+        throw error;
+      }
+    },
+  };
+
+  syncSnapshot();
+
+  return {
+    useStore: (storeName) => {
+      if (storeName !== 'tests') {
+        return {
+          getters: {},
+          actions: {},
+        };
+      }
+
+      return React.useSyncExternalStore(
+        (listener) => {
+          listeners.add(listener);
+
+          return () => {
+            listeners.delete(listener);
+          };
+        },
+        () => snapshot,
+        () => snapshot,
+      );
+    },
+  };
+});
 jest.mock('@controleonline/ui-common/src/api', () => ({
   api: {
     loadArtifactBlob: jest.fn(),
@@ -47,7 +185,7 @@ let commonApi;
 let renderedTree;
 
 function loadSubject() {
-  const appModule = require('./App');
+  const appModule = require('./react/pages/home');
   SmokeDashboard = appModule.SmokeDashboard;
   commonApi = require('@controleonline/ui-common/src/api').api;
 }
