@@ -11,13 +11,7 @@
   },
   "dependencies": {
     "@controleonline/ui-common": "^1.2.70",
-    "@controleonline/ui-login": "^1.0.97",
-    "axios": "^1.18.1",
-    "expo": "~54.0.34",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-native": "0.81.5",
-    "react-native-web": "^0.21.0"
+    "@controleonline/ui-login": "^1.0.97"
   },
   "devDependencies": {
     "@babel/core": "*",
