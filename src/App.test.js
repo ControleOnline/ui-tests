@@ -28,6 +28,14 @@ jest.mock('react-native', () => {
     }),
   };
 });
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({
+    setOptions: jest.fn(),
+  }),
+  useRoute: () => ({
+    params: {},
+  }),
+}));
 jest.mock('@store', () => {
   const React = require('react');
   const {api} = jest.requireMock('@controleonline/ui-common/src/api');
