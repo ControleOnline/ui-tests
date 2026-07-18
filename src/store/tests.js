@@ -43,12 +43,19 @@ function normalizeItem(item) {
   };
 }
 
-function getApiConfig(apiBaseUrl) {
+function getApiConfig(options = {}) {
+  const apiBaseUrl =
+    typeof options === 'string'
+      ? options
+      : options?.apiBaseUrl;
   const config = getSmokeApiConfig();
 
   return {
     ...config,
     apiBaseUrl: String(apiBaseUrl || config.apiBaseUrl || '').trim(),
+    domain: String(options?.domain || config.domain || '').trim(),
+    htaccessUser: String(options?.htaccessUser || config.htaccessUser || '').trim(),
+    htaccessPassword: String(options?.htaccessPassword || config.htaccessPassword || '').trim(),
   };
 }
 
@@ -147,8 +154,7 @@ export default {
   actions: {
     async loadIndex({ commit }, options = {}) {
       const keepCurrent = options?.keepCurrent === true;
-      const apiBaseUrl = options?.apiBaseUrl;
-      const config = getApiConfig(apiBaseUrl);
+      const config = getApiConfig(options);
       const apiClient = options?.api || commonApi;
       const loadSmokeIndexFn =
         typeof apiClient.loadSmokeIndex === 'function'
@@ -211,8 +217,7 @@ export default {
       }
     },
     async runAllTests({ commit, dispatch }, options = {}) {
-      const apiBaseUrl = options?.apiBaseUrl;
-      const config = getApiConfig(apiBaseUrl);
+      const config = getApiConfig(options);
       const apiClient = options?.api || commonApi;
       const triggerSmokeRunFn =
         typeof apiClient.triggerSmokeRun === 'function'
@@ -235,6 +240,9 @@ export default {
         await dispatch('loadIndex', {
           keepCurrent: true,
           apiBaseUrl: config.apiBaseUrl,
+          domain: config.domain,
+          htaccessUser: config.htaccessUser,
+          htaccessPassword: config.htaccessPassword,
         });
         return response;
       } catch (error) {
@@ -252,8 +260,7 @@ export default {
     },
     async loadArtifact({ commit }, payload = {}) {
       const artifact = payload?.artifact || payload;
-      const apiBaseUrl = payload?.apiBaseUrl;
-      const config = getApiConfig(apiBaseUrl);
+      const config = getApiConfig(payload);
       const apiClient = payload?.api || commonApi;
       const loadArtifactBlobFn =
         typeof apiClient.loadArtifactBlob === 'function'

@@ -9,6 +9,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useStore } from '@store';
 import Formatter from '@controleonline/ui-common/src/utils/formatter';
 
@@ -499,9 +500,27 @@ function TestAccordion({
 }
 
 export function SmokeDashboard() {
+  const navigation = useNavigation();
+  const route = useRoute();
   const testsStore = useStore('tests');
   const testsState = testsStore.getters;
   const testsActions = testsStore.actions;
+  const routeSmokeConfig = route.params?.smokeConfig || {};
+  const routeTitle = String(route.params?.title || '').trim();
+  const smokeConfig = useMemo(
+    () => ({
+      apiBaseUrl: String(routeSmokeConfig.apiBaseUrl || '').trim(),
+      domain: String(routeSmokeConfig.domain || '').trim(),
+      htaccessUser: String(routeSmokeConfig.htaccessUser || '').trim(),
+      htaccessPassword: String(routeSmokeConfig.htaccessPassword || '').trim(),
+    }),
+    [
+      routeSmokeConfig.apiBaseUrl,
+      routeSmokeConfig.domain,
+      routeSmokeConfig.htaccessPassword,
+      routeSmokeConfig.htaccessUser,
+    ],
+  );
   const [selectedTypeKey, setSelectedTypeKey] = useState(null);
   const [selectedSuiteId, setSelectedSuiteId] = useState(null);
   const [selectedTestIndex, setSelectedTestIndex] = useState(0);
@@ -534,6 +553,12 @@ export function SmokeDashboard() {
   const runMessage = String(testsState.runMessage || '');
   const runError = String(testsState.runError || '');
 
+  useEffect(() => {
+    navigation.setOptions({
+      title: routeTitle || 'Resultados de testes',
+    });
+  }, [navigation, routeTitle]);
+
   const clearPreview = useCallback(() => {
     if (previewUrlRef.current) {
       URL.revokeObjectURL(previewUrlRef.current);
@@ -547,8 +572,8 @@ export function SmokeDashboard() {
 
   useEffect(() => {
     clearPreview();
-    void testsActions.loadIndex().catch(() => {});
-  }, [clearPreview, testsActions]);
+    void testsActions.loadIndex(smokeConfig).catch(() => {});
+  }, [clearPreview, smokeConfig, testsActions]);
 
   useEffect(() => {
     return () => {
@@ -615,6 +640,7 @@ export function SmokeDashboard() {
     try {
       const blob = await testsActions.loadArtifact({
         artifact,
+        ...smokeConfig,
       });
       const objectUrl = URL.createObjectURL(blob);
 
@@ -634,7 +660,7 @@ export function SmokeDashboard() {
     clearPreview();
 
     try {
-      await testsActions.runAllTests();
+      await testsActions.runAllTests(smokeConfig);
     } catch (error) {
       // o store já registra o erro; evitamos rejeição não tratada.
     }
@@ -713,7 +739,7 @@ export function SmokeDashboard() {
               accessibilityRole="button"
               onPress={() => {
                 clearPreview();
-                void testsActions.loadIndex().catch(() => {});
+                void testsActions.loadIndex(smokeConfig).catch(() => {});
               }}
               style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}
             >
@@ -779,7 +805,7 @@ export function SmokeDashboard() {
                 accessibilityRole="button"
                 onPress={() => {
                   clearPreview();
-                  void testsActions.loadIndex({ keepCurrent: true }).catch(() => {});
+                  void testsActions.loadIndex({ ...smokeConfig, keepCurrent: true }).catch(() => {});
                 }}
                 disabled={refreshing}
                 style={({ pressed }) => [
