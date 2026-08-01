@@ -10,3 +10,7 @@
 - O dashboard continua read-only; a execução dos testes fica no backend.
 - Sempre manter a UI dividida em blocos pequenos e reutilizáveis.
 - `ui-tests` é um módulo plugável. Não adicionar `app.json`, tela local de login ou bootstrap próprio de sessão aqui; a autenticação e a montagem da entrada ficam no shell/`ui-login` do host.
+
+## Qualidade de código
+
+- A barra comum de modularizacao, testes, smoke tests e limite de tamanho de componentes vive em `https://github.com/ControleOnline/agents-mcp/blob/master/skills/shared/code-quality.md`.
