@@ -13,8 +13,13 @@ jest.mock('react-native', () => {
     ActivityIndicator: 'ActivityIndicator',
     Image: 'Image',
     Pressable: 'Pressable',
+    Platform: {
+      OS: 'web',
+      select: (options) => options.web || options.default || options.ios || options.android,
+    },
     ScrollView: 'ScrollView',
     Text: 'Text',
+    TouchableOpacity: 'TouchableOpacity',
     View: 'View',
     StyleSheet: {
       create: (styles) => styles,
@@ -28,7 +33,22 @@ jest.mock('react-native', () => {
     }),
   };
 });
+jest.mock('@controleonline/ui-common/src/react/components/MessageService', () => ({
+  useMessage: () => ({
+    showError: jest.fn(),
+  }),
+}));
+jest.mock('react-native-vector-icons/Feather', () => {
+  const React = require('react');
+  return (props) => React.createElement('icon', props, props.children);
+});
+jest.mock('@controleonline/ui-default/src/react/components/table/DefaultTableImportModal', () => {
+  const React = require('react');
+  return (props) => React.createElement('DefaultTableImportModal', props);
+});
 jest.mock('@react-navigation/native', () => ({
+  NavigationRouteContext: require('react').createContext(undefined),
+  useIsFocused: jest.fn(() => false),
   useNavigation: () => ({
     setOptions: jest.fn(),
   }),
@@ -191,6 +211,32 @@ jest.setTimeout(60000);
 let SmokeDashboard;
 let commonApi;
 let renderedTree;
+let mockDefaultTableProps = null;
+
+jest.mock('@controleonline/ui-default/src/react/components/table/DefaultTable', () => {
+  const React = require('react');
+
+  return function MockDefaultTable(props) {
+    mockDefaultTableProps = props;
+    const rows = Array.isArray(props.data) ? props.data : [];
+
+    return React.createElement(
+      'DefaultTable',
+      props,
+      rows.map((row) =>
+        React.createElement(
+          'TouchableOpacity',
+          {
+            key: row?.suiteId || row?.id || row?.displayName,
+            accessibilityRole: 'button',
+            onPress: () => props.onRowPress?.(row),
+          },
+          React.createElement('Text', null, row?.displayName || row?.suite || row?.suitePath || ''),
+        ),
+      ),
+    );
+  };
+});
 
 function loadSubject() {
   const appModule = require('./react/pages/home');
@@ -439,6 +485,20 @@ function findButton(root, label) {
   return button;
 }
 
+function findPressableContainingText(root, label) {
+  const pressables = root.findAll(
+    (node) => node.props?.accessibilityRole === 'button',
+  );
+
+  const node = pressables.find((candidate) => getNodeText(candidate).includes(label));
+
+  if (!node) {
+    throw new Error(`Linha não encontrada: ${label}`);
+  }
+
+  return node;
+}
+
 const flushMicrotasks = () => new Promise((resolve) => setImmediate(resolve));
 
 async function flushUpdates(times = 2) {
@@ -499,6 +559,7 @@ async function pressButton(label) {
 describe('SmokeDashboard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockDefaultTableProps = null;
     loadSubject();
     renderedTree = null;
   });
@@ -524,6 +585,7 @@ describe('SmokeDashboard', () => {
     expect(findTextNodes(tree.root, 'Smoke Atlas').length).toBeGreaterThan(0);
     expect(findTextNodes(tree.root, 'Tipos').length).toBeGreaterThan(0);
     expect(findTextNodes(tree.root, 'Testes').length).toBeGreaterThan(0);
+    expect(mockDefaultTableProps?.storeName).toBe('tests');
     expect(findButton(tree.root, 'Browser Smoke')).toBeTruthy();
     expect(
       findTextNodes(tree.root, 'abre o fluxo de login e registra prints').length,
@@ -556,7 +618,12 @@ describe('SmokeDashboard', () => {
     await waitForCondition(() => findButton(tree.root, 'Browser Smoke'));
 
     await pressButton('PHPUnit');
-    await pressButton('Core');
+    const suiteRow = findPressableContainingText(tree.root, 'Core');
+
+    await act(async () => {
+      suiteRow.props.onPress?.();
+    });
+    await flushUpdates(2);
 
     expect(
       findTextNodes(tree.root, 'ExampleServiceTest::testItRegistersRecord').length,
