@@ -1,10 +1,16 @@
 ## ui-tests
 
-- Este pacote compartilha a UI de resultados de testes entre o app standalone e o `app-community`.
-- Não reintroduzir TypeScript, Vite ou HTML manual.
-- A fonte de configuração local é `config/env.local.js`, com `config/env.local.sample` como template.
-- O app consome `GET /tests/index.json` e artefatos autenticados com `X-API-KEY`.
+- Este pacote é um módulo do `app-community` para a visão ADMIN do playground de resultados de testes.
+- Não reintroduzir app standalone, TypeScript, Vite ou HTML manual.
+- A API compartilhada deve vir de `@controleonline/ui-common/src/api`.
+- Os formatadores compartilhados devem vir de `@controleonline/ui-common/src/utils/formatter`.
+- O store do módulo deve usar o runtime compartilhado de `@store`; manter apenas o store de domínio `src/store/tests.js`, agregado no store raiz do `app-community`.
+- A configuração local do dashboard fica em `src/smokeConfig.js`.
 - O índice público chega com `types[]` e `suites[]`; a interface deve separar browser smoke, phpunit e outros tipos.
-- O dashboard continua read-only; a execução dos smoke tests fica no backend.
+- O dashboard continua read-only; a execução dos testes fica no backend.
 - Sempre manter a UI dividida em blocos pequenos e reutilizáveis.
-- Qualquer alteração visível no browser deve continuar funcionando em `expo export --platform web`.
+- `ui-tests` é um módulo plugável. Não adicionar `app.json`, tela local de login ou bootstrap próprio de sessão aqui; a autenticação e a montagem da entrada ficam no shell/`ui-login` do host.
+
+## Qualidade de código
+
+- A barra comum de modularizacao, testes, smoke tests e limite de tamanho de componentes vive em `https://github.com/ControleOnline/agents-mcp/blob/master/skills/shared/code-quality.md`.

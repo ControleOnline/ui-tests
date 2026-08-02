@@ -1,18 +1,248 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import { SmokeDashboard } from './App';
-import * as api from './lib/api';
+import React from 'react';
+import { act, create } from 'react-test-renderer';
 
-jest.mock('./LoginScreen', () => 'LoginScreen');
-jest.mock('./lib/api', () => ({
-  loadArtifactBlob: jest.fn(),
-  loadSmokeIndex: jest.fn(),
-  triggerSmokeRun: jest.fn(),
+const smokeConfig = {
+  apiBaseUrl: 'https://example.test',
+  domain: '',
+  htaccessUser: '',
+  htaccessPassword: '',
+};
+
+jest.mock('react-native', () => {
+  return {
+    ActivityIndicator: 'ActivityIndicator',
+    Image: 'Image',
+    Pressable: 'Pressable',
+    Platform: {
+      OS: 'web',
+      select: (options) => options.web || options.default || options.ios || options.android,
+    },
+    ScrollView: 'ScrollView',
+    Text: 'Text',
+    TouchableOpacity: 'TouchableOpacity',
+    View: 'View',
+    StyleSheet: {
+      create: (styles) => styles,
+      flatten: (styles) => styles,
+    },
+    useWindowDimensions: () => ({
+      width: 1280,
+      height: 800,
+      scale: 1,
+      fontScale: 1,
+    }),
+  };
+});
+jest.mock('@controleonline/ui-common/src/react/components/MessageService', () => ({
+  useMessage: () => ({
+    showError: jest.fn(),
+  }),
+}));
+jest.mock('react-native-vector-icons/Feather', () => {
+  const React = require('react');
+  return (props) => React.createElement('icon', props, props.children);
+});
+jest.mock('@controleonline/ui-default/src/react/components/table/DefaultTableImportModal', () => {
+  const React = require('react');
+  return (props) => React.createElement('DefaultTableImportModal', props);
+});
+jest.mock('@react-navigation/native', () => ({
+  NavigationRouteContext: require('react').createContext(undefined),
+  useIsFocused: jest.fn(() => false),
+  useNavigation: () => ({
+    setOptions: jest.fn(),
+  }),
+  useRoute: () => ({
+    params: {},
+  }),
+}));
+jest.mock('@store', () => {
+  const React = require('react');
+  const {api} = jest.requireMock('@controleonline/ui-common/src/api');
+
+  const listeners = new Set();
+
+  const initialState = () => ({
+    item: null,
+    error: null,
+    isLoading: true,
+    refreshing: false,
+    isSaving: false,
+    runMessage: '',
+    runError: '',
+  });
+
+  let state = initialState();
+  let snapshot = null;
+
+  const syncSnapshot = () => {
+    snapshot = {
+      getters: state,
+      actions,
+    };
+  };
+
+  const emit = () => {
+    syncSnapshot();
+    listeners.forEach((listener) => listener());
+  };
+
+  const setState = (patch) => {
+    state = {
+      ...state,
+      ...patch,
+    };
+    emit();
+  };
+
+  const actions = {
+    async loadIndex(options = {}) {
+      const keepCurrent = options.keepCurrent === true;
+
+      setState({
+        isLoading: !keepCurrent,
+        refreshing: keepCurrent,
+        error: keepCurrent ? state.error : null,
+        runMessage: keepCurrent ? state.runMessage : '',
+        runError: keepCurrent ? state.runError : '',
+      });
+
+      try {
+        const index = await api.loadSmokeIndex(smokeConfig);
+
+        setState({
+          item: index,
+          error: null,
+          isLoading: false,
+          refreshing: false,
+        });
+
+        return index;
+      } catch (error) {
+        setState({
+          item: keepCurrent ? state.item : null,
+          error:
+            error instanceof Error && error.message.trim() !== ''
+              ? error.message
+              : 'Falha ao consultar o índice publicado.',
+          isLoading: false,
+          refreshing: false,
+        });
+
+        throw error;
+      }
+    },
+    async loadArtifact({artifact}) {
+      return api.loadArtifactBlob(smokeConfig, artifact);
+    },
+    async runAllTests() {
+      setState({
+        isSaving: true,
+        runMessage: '',
+        runError: '',
+      });
+
+      try {
+        const response = await api.triggerSmokeRun(smokeConfig);
+
+        setState({
+          isSaving: false,
+          runMessage:
+            response && typeof response === 'object' && String(response.message || '').trim() !== ''
+              ? String(response.message).trim()
+              : 'Smoke tests disparados com sucesso.',
+        });
+
+        await actions.loadIndex({keepCurrent: true});
+
+        return response;
+      } catch (error) {
+        setState({
+          isSaving: false,
+          runError:
+            error instanceof Error && error.message.trim() !== ''
+              ? error.message
+              : 'Falha ao disparar a execução dos smoke tests.',
+        });
+
+        throw error;
+      }
+    },
+  };
+
+  syncSnapshot();
+
+  return {
+    useStore: (storeName) => {
+      if (storeName !== 'tests') {
+        return {
+          getters: {},
+          actions: {},
+        };
+      }
+
+      return React.useSyncExternalStore(
+        (listener) => {
+          listeners.add(listener);
+
+          return () => {
+            listeners.delete(listener);
+          };
+        },
+        () => snapshot,
+        () => snapshot,
+      );
+    },
+  };
+});
+jest.mock('@controleonline/ui-common/src/api', () => ({
+  api: {
+    loadArtifactBlob: jest.fn(),
+    loadSmokeIndex: jest.fn(),
+    triggerSmokeRun: jest.fn(),
+  },
+}));
+jest.mock('./smokeConfig', () => ({
+  getSmokeApiConfig: () => smokeConfig,
 }));
 
 jest.setTimeout(60000);
 
-const mockedLoadSmokeIndex = api.loadSmokeIndex;
-const mockedTriggerSmokeRun = api.triggerSmokeRun;
+let SmokeDashboard;
+let commonApi;
+let renderedTree;
+let mockDefaultTableProps = null;
+
+jest.mock('@controleonline/ui-default/src/react/components/table/DefaultTable', () => {
+  const React = require('react');
+
+  return function MockDefaultTable(props) {
+    mockDefaultTableProps = props;
+    const rows = Array.isArray(props.data) ? props.data : [];
+
+    return React.createElement(
+      'DefaultTable',
+      props,
+      rows.map((row) =>
+        React.createElement(
+          'TouchableOpacity',
+          {
+            key: row?.suiteId || row?.id || row?.displayName,
+            accessibilityRole: 'button',
+            onPress: () => props.onRowPress?.(row),
+          },
+          React.createElement('Text', null, row?.displayName || row?.suite || row?.suitePath || ''),
+        ),
+      ),
+    );
+  };
+});
+
+function loadSubject() {
+  const appModule = require('./react/pages/home');
+  SmokeDashboard = appModule.SmokeDashboard;
+  commonApi = require('@controleonline/ui-common/src/api').api;
+}
 
 function createIndexFixture() {
   const browserSuiteId = 'browser-smoke-login-flow';
@@ -128,29 +358,29 @@ function createIndexFixture() {
     ],
     suites: [
       {
-      type: 'browser-smoke',
-      typeDisplayName: 'Browser Smoke',
-      suite: 'login-flow',
-      suitePath: 'browser-smoke/login-flow',
-      suiteId: browserSuiteId,
-      displayName: 'Login Flow',
-      generatedAt: '2026-07-06T17:42:40.016Z',
-      updatedAt: '2026-07-06T17:42:40.016Z',
-      status: 'passed',
-      summary: { total: 1, passed: 1, failed: 0 },
-      tests: [
-        {
-          title: 'abre o fluxo de login e registra prints',
-          status: 'passed',
-          error: null,
-          screenshots: [
-            {
-              label: 'Tela inicial',
-              name: '01-login-screen.png',
-              url: '/tests/artifacts/browser-smoke-login-flow/01-login-screen.png',
-              mimeType: 'image/png',
-              kind: 'image',
-              available: true,
+        type: 'browser-smoke',
+        typeDisplayName: 'Browser Smoke',
+        suite: 'login-flow',
+        suitePath: 'browser-smoke/login-flow',
+        suiteId: browserSuiteId,
+        displayName: 'Login Flow',
+        generatedAt: '2026-07-06T17:42:40.016Z',
+        updatedAt: '2026-07-06T17:42:40.016Z',
+        status: 'passed',
+        summary: { total: 1, passed: 1, failed: 0 },
+        tests: [
+          {
+            title: 'abre o fluxo de login e registra prints',
+            status: 'passed',
+            error: null,
+            screenshots: [
+              {
+                label: 'Tela inicial',
+                name: '01-login-screen.png',
+                url: '/tests/artifacts/browser-smoke-login-flow/01-login-screen.png',
+                mimeType: 'image/png',
+                kind: 'image',
+                available: true,
               },
             ],
             steps: [
@@ -197,113 +427,226 @@ function createIndexFixture() {
         links: { report: '/tests/artifacts/phpunit-unit/report.xml' },
       },
     ],
-    links: { self: '/tests/index.json', artifacts: '/tests/artifacts' },
+    links: { self: '/tests', artifacts: '/tests/artifacts' },
   };
+}
+
+function isPlainTextNode(node) {
+  return (
+    Array.isArray(node?.children) &&
+    node.children.length > 0 &&
+    node.children.every((child) => typeof child === 'string' || typeof child === 'number')
+  );
+}
+
+function getPlainText(node) {
+  return node.children.map((child) => String(child)).join('');
+}
+
+function findTextNodes(root, text) {
+  return root.findAll(
+    (node) => isPlainTextNode(node) && getPlainText(node) === text,
+  );
+}
+
+function getNodeText(node) {
+  if (typeof node === 'string' || typeof node === 'number') {
+    return String(node);
+  }
+
+  if (!node || !Array.isArray(node.children)) {
+    return '';
+  }
+
+  return node.children
+    .map((child) => getNodeText(child))
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function findButton(root, label) {
+  const buttons = root.findAll(
+    (node) => node.props?.accessibilityRole === 'button',
+  );
+
+  const button = buttons.find((node) => {
+    if (String(node.props?.accessibilityLabel || '').trim() === label) {
+      return true;
+    }
+
+    return getNodeText(node) === label;
+  });
+
+  if (!button) {
+    throw new Error(`Botão não encontrado: ${label}`);
+  }
+
+  return button;
+}
+
+function findPressableContainingText(root, label) {
+  const pressables = root.findAll(
+    (node) => node.props?.accessibilityRole === 'button',
+  );
+
+  const node = pressables.find((candidate) => getNodeText(candidate).includes(label));
+
+  if (!node) {
+    throw new Error(`Linha não encontrada: ${label}`);
+  }
+
+  return node;
+}
+
+const flushMicrotasks = () => new Promise((resolve) => setImmediate(resolve));
+
+async function flushUpdates(times = 2) {
+  for (let index = 0; index < times; index += 1) {
+    await act(async () => {
+      await flushMicrotasks();
+    });
+  }
+}
+
+async function waitForCondition(predicate, timeoutMs = 5000) {
+  const startedAt = Date.now();
+  let lastError = null;
+
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      if (predicate()) {
+        return;
+      }
+    } catch (error) {
+      lastError = error;
+    }
+
+    await act(async () => {
+      await flushMicrotasks();
+    });
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+
+  throw new Error('Timed out waiting for condition.');
+}
+
+async function renderDashboard() {
+  let tree;
+
+  await act(async () => {
+    tree = create(<SmokeDashboard />);
+  });
+
+  renderedTree = tree;
+  await waitForCondition(() => commonApi.loadSmokeIndex.mock.calls.length > 0);
+  return tree;
+}
+
+async function pressButton(label) {
+  const button = findButton(renderedTree.root, label);
+
+  await act(async () => {
+    button.props.onPress?.();
+  });
+
+  await flushUpdates(2);
 }
 
 describe('SmokeDashboard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockDefaultTableProps = null;
+    loadSubject();
+    renderedTree = null;
   });
 
-  const authConfig = {
-    apiBaseUrl: 'https://example.test',
-  };
+  afterEach(() => {
+    renderedTree?.unmount?.();
+    renderedTree = null;
+  });
 
   it('renders grouped types, suites, and tests after loading the index', async () => {
-    mockedLoadSmokeIndex.mockResolvedValue(createIndexFixture());
+    commonApi.loadSmokeIndex.mockResolvedValue(createIndexFixture());
 
-    render(
-      <SmokeDashboard
-        apiBaseUrl={authConfig.apiBaseUrl}
-      />,
-    );
+    const tree = await renderDashboard();
 
-    await screen.findByRole('button', { name: 'Browser Smoke' });
+    await waitForCondition(() => findTextNodes(tree.root, 'Smoke Atlas').length > 0);
+    await waitForCondition(() => findTextNodes(tree.root, 'Browser Smoke').length > 0);
 
-    expect(mockedLoadSmokeIndex).toHaveBeenCalledWith(
+    expect(commonApi.loadSmokeIndex).toHaveBeenCalledWith(
       expect.objectContaining({
-        apiBaseUrl: authConfig.apiBaseUrl,
+        apiBaseUrl: smokeConfig.apiBaseUrl,
       }),
     );
+    expect(findTextNodes(tree.root, 'Smoke Atlas').length).toBeGreaterThan(0);
+    expect(findTextNodes(tree.root, 'Tipos').length).toBeGreaterThan(0);
+    expect(findTextNodes(tree.root, 'Testes').length).toBeGreaterThan(0);
+    expect(mockDefaultTableProps?.storeName).toBe('tests');
+    expect(findButton(tree.root, 'Browser Smoke')).toBeTruthy();
+    expect(
+      findTextNodes(tree.root, 'abre o fluxo de login e registra prints').length,
+    ).toBeGreaterThan(0);
 
-    expect(screen.getAllByText('Smoke Atlas').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Tipos').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Testes').length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'Login Flow' })).toBeTruthy();
-    expect(screen.getAllByText('abre o fluxo de login e registra prints').length).toBeGreaterThan(0);
+    await pressButton('Atualizar índice');
+
+    expect(commonApi.loadSmokeIndex).toHaveBeenCalledTimes(2);
   });
 
   it('shows the error state when the API fails', async () => {
-    mockedLoadSmokeIndex.mockRejectedValue(new Error('401 Unauthorized'));
+    commonApi.loadSmokeIndex.mockRejectedValue(new Error('401 Unauthorized'));
 
-    render(
-      <SmokeDashboard
-        apiBaseUrl={authConfig.apiBaseUrl}
-      />,
+    const tree = await renderDashboard();
+
+    await waitForCondition(
+      () =>
+        findTextNodes(tree.root, 'Falha ao consultar o índice publicado.').length > 0,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Falha ao consultar o índice publicado.')).toBeTruthy();
-    });
-
-    expect(screen.getAllByText('401 Unauthorized').length).toBeGreaterThan(0);
+    expect(findTextNodes(tree.root, 'Falha ao consultar o índice publicado.').length).toBeGreaterThan(0);
+    expect(findTextNodes(tree.root, '401 Unauthorized').length).toBeGreaterThan(0);
   });
 
   it('allows switching types and suites', async () => {
-    mockedLoadSmokeIndex.mockResolvedValue(createIndexFixture());
+    commonApi.loadSmokeIndex.mockResolvedValue(createIndexFixture());
 
-    render(
-      <SmokeDashboard
-        apiBaseUrl={authConfig.apiBaseUrl}
-      />,
-    );
+    const tree = await renderDashboard();
 
-    await screen.findByRole('button', { name: 'Browser Smoke' });
+    await waitForCondition(() => findButton(tree.root, 'Browser Smoke'));
 
-    fireEvent.press(screen.getByRole('button', { name: 'PHPUnit' }));
+    await pressButton('PHPUnit');
+    const suiteRow = findPressableContainingText(tree.root, 'Core');
 
-    await waitFor(() => {
-      expect(screen.getAllByText('ExampleServiceTest::testItRejectsInvalidData').length).toBeGreaterThan(0);
+    await act(async () => {
+      suiteRow.props.onPress?.();
     });
+    await flushUpdates(2);
 
-    fireEvent.press(screen.getByRole('button', { name: 'Core' }));
-
-    await waitFor(() => {
-      expect(screen.getAllByText('ExampleServiceTest::testItRegistersRecord').length).toBeGreaterThan(0);
-    });
+    expect(
+      findTextNodes(tree.root, 'ExampleServiceTest::testItRegistersRecord').length,
+    ).toBeGreaterThan(0);
+    expect(findTextNodes(tree.root, 'PHPUnit').length).toBeGreaterThan(0);
   });
 
-  it('triggers a new smoke run and refreshes the index', async () => {
-    mockedLoadSmokeIndex.mockResolvedValue(createIndexFixture());
-    mockedTriggerSmokeRun.mockResolvedValue({
-      status: 'running',
-      progress: 15,
-      message: 'Smoke tests disparados.',
+  it('triggers the shared run action and reloads the index', async () => {
+    commonApi.loadSmokeIndex.mockResolvedValue(createIndexFixture());
+    commonApi.triggerSmokeRun.mockResolvedValue({
+      message: 'Smoke tests disparados com sucesso.',
     });
 
-    render(
-      <SmokeDashboard
-        apiBaseUrl={authConfig.apiBaseUrl}
-      />,
+    const tree = await renderDashboard();
+
+    await waitForCondition(() => findButton(tree.root, 'Refazer todos os testes'));
+    await pressButton('Refazer todos os testes');
+
+    expect(commonApi.triggerSmokeRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        apiBaseUrl: smokeConfig.apiBaseUrl,
+      }),
     );
-
-    await waitFor(() => {
-      expect(screen.getAllByText('Browser Smoke').length).toBeGreaterThan(0);
-    });
-
-    fireEvent.press(screen.getByRole('button', { name: 'Refazer todos os testes' }));
-
-    await waitFor(() => {
-      expect(mockedTriggerSmokeRun).toHaveBeenCalledWith(
-        expect.objectContaining({
-          apiBaseUrl: authConfig.apiBaseUrl,
-        }),
-      );
-    });
-
-    await waitFor(() => {
-      expect(mockedLoadSmokeIndex).toHaveBeenCalledTimes(2);
-    });
+    await waitForCondition(() => commonApi.loadSmokeIndex.mock.calls.length === 2);
   });
 });

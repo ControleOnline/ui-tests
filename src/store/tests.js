@@ -1,5 +1,6 @@
-import { loadArtifactBlob, loadSmokeIndex, triggerSmokeRun } from '../lib/api';
-import { getSmokeApiConfig } from '../lib/config';
+import { api as commonApi } from '@controleonline/ui-common/src/api';
+import { getSmokeApiConfig } from '../smokeConfig';
+import { formatDateTimeLabel, statusLabel } from '../react/pages/home/SmokeDashboard.helpers';
 
 const EMPTY_SUMMARY = {
   types: { total: 0, passed: 0, failed: 0 },
@@ -43,12 +44,96 @@ function normalizeItem(item) {
   };
 }
 
-function getApiConfig(apiBaseUrl) {
+function buildColumns() {
+  return [
+    {
+      sortable: true,
+      name: 'displayName',
+      align: 'left',
+      label: 'suite',
+      isIdentity: true,
+      searchable: true,
+      format(value) {
+        return value || '';
+      },
+    },
+    {
+      sortable: true,
+      name: 'suitePath',
+      align: 'left',
+      label: 'caminho',
+      searchable: true,
+      format(value) {
+        return value || '';
+      },
+    },
+    {
+      sortable: true,
+      name: 'status',
+      align: 'left',
+      label: 'status',
+      searchable: true,
+      list: [
+        {value: 'passed', label: statusLabel('passed')},
+        {value: 'failed', label: statusLabel('failed')},
+        {value: 'pending', label: statusLabel('pending')},
+      ],
+      format(value) {
+        return statusLabel(value);
+      },
+    },
+    {
+      sortable: true,
+      name: 'testsCount',
+      align: 'center',
+      label: 'testes',
+      format(value) {
+        return String(Number(value) || 0);
+      },
+    },
+    {
+      sortable: true,
+      name: 'passedCount',
+      align: 'center',
+      label: 'passaram',
+      format(value) {
+        return String(Number(value) || 0);
+      },
+    },
+    {
+      sortable: true,
+      name: 'failedCount',
+      align: 'center',
+      label: 'falharam',
+      format(value) {
+        return String(Number(value) || 0);
+      },
+    },
+    {
+      sortable: true,
+      name: 'updatedAt',
+      align: 'left',
+      label: 'atualizado em',
+      format(value) {
+        return formatDateTimeLabel(value);
+      },
+    },
+  ];
+}
+
+function getApiConfig(options = {}) {
+  const apiBaseUrl =
+    typeof options === 'string'
+      ? options
+      : options?.apiBaseUrl;
   const config = getSmokeApiConfig();
 
   return {
     ...config,
     apiBaseUrl: String(apiBaseUrl || config.apiBaseUrl || '').trim(),
+    domain: String(options?.domain || config.domain || '').trim(),
+    htaccessUser: String(options?.htaccessUser || config.htaccessUser || '').trim(),
+    htaccessPassword: String(options?.htaccessPassword || config.htaccessPassword || '').trim(),
   };
 }
 
@@ -83,6 +168,12 @@ export default {
     totalItems: 0,
     summary: EMPTY_SUMMARY,
     filters: {},
+    visibleColumns: {},
+    configs: {
+      searchKey: 'search',
+      viewMode: 'table',
+    },
+    columns: buildColumns(),
     loadedAt: 0,
     loadedKey: '',
   },
@@ -135,6 +226,18 @@ export default {
       state.filters = filters && typeof filters === 'object' ? filters : {};
       return 'filters';
     },
+    SET_VISIBLE_COLUMNS(state, visibleColumns) {
+      state.visibleColumns = visibleColumns && typeof visibleColumns === 'object' ? visibleColumns : {};
+      return 'visibleColumns';
+    },
+    SET_CONFIGS(state, configs) {
+      state.configs = configs && typeof configs === 'object' ? configs : {};
+      return 'configs';
+    },
+    SET_COLUMNS(state, columns) {
+      state.columns = Array.isArray(columns) ? columns : [];
+      return 'columns';
+    },
     SET_LOADED_AT(state, loadedAt) {
       state.loadedAt = Number(loadedAt) || 0;
       return 'loadedAt';
@@ -147,13 +250,12 @@ export default {
   actions: {
     async loadIndex({ commit }, options = {}) {
       const keepCurrent = options?.keepCurrent === true;
-      const apiBaseUrl = options?.apiBaseUrl;
-      const config = getApiConfig(apiBaseUrl);
-      const apiClient = options?.api || {};
+      const config = getApiConfig(options);
+      const apiClient = options?.api || commonApi;
       const loadSmokeIndexFn =
         typeof apiClient.loadSmokeIndex === 'function'
           ? apiClient.loadSmokeIndex
-          : loadSmokeIndex;
+          : commonApi.loadSmokeIndex;
       const requestId = ++loadRequestId;
 
       if (keepCurrent) {
@@ -210,14 +312,37 @@ export default {
         }
       }
     },
+    setItems({ commit }, items) {
+      commit('SET_ITEMS', items);
+      return items;
+    },
+    setTotalItems({ commit }, totalItems) {
+      commit('SET_TOTALITEMS', totalItems);
+      return totalItems;
+    },
+    setFilters({ commit }, filters) {
+      commit('SET_FILTERS', filters);
+      return filters;
+    },
+    setVisibleColumns({ commit }, visibleColumns) {
+      commit('SET_VISIBLE_COLUMNS', visibleColumns);
+      return visibleColumns;
+    },
+    setColumns({ commit }, columns) {
+      commit('SET_COLUMNS', columns);
+      return columns;
+    },
+    setConfigs({ commit }, configs) {
+      commit('SET_CONFIGS', configs);
+      return configs;
+    },
     async runAllTests({ commit, dispatch }, options = {}) {
-      const apiBaseUrl = options?.apiBaseUrl;
-      const config = getApiConfig(apiBaseUrl);
-      const apiClient = options?.api || {};
+      const config = getApiConfig(options);
+      const apiClient = options?.api || commonApi;
       const triggerSmokeRunFn =
         typeof apiClient.triggerSmokeRun === 'function'
           ? apiClient.triggerSmokeRun
-          : triggerSmokeRun;
+          : commonApi.triggerSmokeRun;
       const requestId = ++runRequestId;
 
       commit('SET_ISSAVING', true);
@@ -235,6 +360,9 @@ export default {
         await dispatch('loadIndex', {
           keepCurrent: true,
           apiBaseUrl: config.apiBaseUrl,
+          domain: config.domain,
+          htaccessUser: config.htaccessUser,
+          htaccessPassword: config.htaccessPassword,
         });
         return response;
       } catch (error) {
@@ -252,13 +380,12 @@ export default {
     },
     async loadArtifact({ commit }, payload = {}) {
       const artifact = payload?.artifact || payload;
-      const apiBaseUrl = payload?.apiBaseUrl;
-      const config = getApiConfig(apiBaseUrl);
-      const apiClient = payload?.api || {};
+      const config = getApiConfig(payload);
+      const apiClient = payload?.api || commonApi;
       const loadArtifactBlobFn =
         typeof apiClient.loadArtifactBlob === 'function'
           ? apiClient.loadArtifactBlob
-          : loadArtifactBlob;
+          : commonApi.loadArtifactBlob;
 
       if (!artifact || typeof artifact !== 'object') {
         throw new Error('Artefato inválido.');
