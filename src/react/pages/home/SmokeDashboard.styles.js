@@ -430,6 +430,34 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     textAlign: 'center',
   },
+
+  metricsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  splitLayout: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 16,
+    width: '100%',
+  },
+  splitLayoutStack: {
+    flexDirection: 'column',
+  },
+  splitList: {
+    flex: 1.15,
+    minWidth: 0,
+  },
+  splitDetails: {
+    flex: 1,
+    minWidth: 0,
+    position: 'sticky',
+    top: 16,
+    alignSelf: 'flex-start',
+    maxHeight: 'calc(100vh - 120px)',
+    overflow: 'auto',
+  },
 });
 
 export default styles;

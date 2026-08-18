@@ -18,7 +18,6 @@ import {
   StatusFilterChips,
   sortSuitesFailedFirst,
   isSmokeType,
-  TypeSectionList,
 } from './SmokeDashboard.chrome';
 import styles from './SmokeDashboard.styles';
 
@@ -300,129 +299,87 @@ export function SmokeDashboard() {
         <View style={styles.headerMain}>
           <View style={styles.headerEyebrow}>
             <Badge tone={statusTone(displayStatus)} label={statusLabel(displayStatus)} styles={styles} />
-            <Text style={styles.headerEyebrowText}>Smoke Atlas</Text>
+            <Text style={styles.headerEyebrowText}>Tests Playground</Text>
           </View>
-          <Text style={styles.headerTitle}>Último smoke publicado</Text>
+          <Text style={styles.headerTitle}>Resultados de testes</Text>
           <Text style={styles.headerSubtitle}>
-            Tipos, suites, testes e prints em uma interface compacta. Clique em um tipo para filtrar as suites.
+            Clique numa suite à esquerda para ver prints e detalhes à direita.
           </Text>
+          {runMessage ? <Text style={styles.headerMessage}>{runMessage}</Text> : null}
+          {runError ? <Text style={styles.headerMessageError}>{runError}</Text> : null}
+        </View>
+        <View style={styles.headerSide}>
           <View style={styles.headerMetaRow}>
             <Badge tone={statusTone(index?.status)} label={statusLabel(index?.status)} styles={styles} />
-            <Text style={styles.headerSubtitle}>Gerado em {String(index.generatedAt || '-')}</Text>
-            <Text style={styles.headerSubtitle}>Última execução {String(index.lastRunAt || '-')}</Text>
+            <Text style={styles.headerSubtitle}>Gerado {String(index.generatedAt || '-')}</Text>
           </View>
-          {runMessage ? <Text style={styles.actionMessage}>{runMessage}</Text> : null}
-          {runError ? <Text style={styles.actionMessageError}>{runError}</Text> : null}
-          {loadingError && index ? <Text style={styles.actionMessageError}>{loadingError}</Text> : null}
-        </View>
-
-        <View style={styles.headerSide}>
-          <View style={styles.headerStatsRow}>
-            <MetricCard
-              label="Tipos"
-              value={index.summary?.types?.total}
-              description={`${index.summary?.types?.passed || 0} passaram · ${index.summary?.types?.failed || 0} falharam`}
-              tone={(index.summary?.types?.failed || 0) > 0 ? 'danger' : 'success'}
-              styles={styles}
-            />
-            <MetricCard
-              label="Suites"
-              value={index.summary?.suites?.total}
-              description={`${index.summary?.suites?.passed || 0} passaram · ${index.summary?.suites?.failed || 0} falharam`}
-              tone={(index.summary?.suites?.failed || 0) > 0 ? 'danger' : 'success'}
-              styles={styles}
-            />
-            <MetricCard
-              label="Testes"
-              value={index.summary?.tests?.total}
-              description={`${index.summary?.tests?.passed || 0} passaram · ${index.summary?.tests?.failed || 0} falharam`}
-              tone={(index.summary?.tests?.failed || 0) > 0 ? 'danger' : 'success'}
-              styles={styles}
-            />
-            <MetricCard
-              label="Progresso"
-              value={formatPercent(index.progress)}
-              description="Do índice publicado"
-              styles={styles}
-            />
-          </View>
-          <View style={styles.actionButtonRow}>
+          <View style={styles.headerActions}>
             <TouchableOpacity
               accessibilityRole="button"
-              onPress={() => {
-                clearPreview();
-                void testsActions.loadIndex({...smokeConfig, keepCurrent: true}).catch(() => {});
-              }}
-              disabled={refreshing}
-              style={({pressed}) => [
-                styles.actionButton,
-                styles.actionButtonAlt,
-                pressed && !refreshing && styles.pressed,
-                refreshing && styles.actionButtonDisabled,
-              ]}
+              disabled={refreshing || runState === 'running'}
+              onPress={() => testsActions.loadIndex({...smokeConfig, keepCurrent: true})}
+              style={[styles.secondaryButton, (refreshing || runState === 'running') && styles.buttonDisabled]}
             >
-              <Text style={[styles.actionButtonLabel, styles.actionButtonLabelAlt]}>
-                {refreshing ? 'Atualizando...' : 'Atualizar índice'}
-              </Text>
+              <Text style={styles.secondaryButtonText}>{refreshing ? 'Atualizando…' : 'Atualizar'}</Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               accessibilityRole="button"
-              onPress={() => void runAllTests()}
-              disabled={runState === 'running'}
-              style={({pressed}) => [
-                styles.actionButton,
-                pressed && runState !== 'running' && styles.pressed,
-                runState === 'running' && styles.actionButtonDisabled,
-              ]}
+              disabled={runState === 'running' || refreshing}
+              onPress={() => testsActions.runSmoke(smokeConfig)}
+              style={[styles.primaryButton, (runState === 'running' || refreshing) && styles.buttonDisabled]}
             >
-              <Text style={styles.actionButtonLabel}>
-                {runState === 'running' ? 'Executando...' : 'Refazer todos os testes'}
+              <Text style={styles.primaryButtonText}>
+                {runState === 'running' ? 'Rodando…' : 'Rodar testes no cluster'}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
+      <View style={styles.metricsRow}>
+        <MetricCard
+          label="Tipos"
+          value={index.summary?.types?.total}
+          description={`${index.summary?.types?.passed || 0} ok · ${index.summary?.types?.failed || 0} falha`}
+          tone={(index.summary?.types?.failed || 0) > 0 ? 'danger' : 'success'}
+          styles={styles}
+        />
+        <MetricCard
+          label="Suites"
+          value={index.summary?.suites?.total}
+          description={`${index.summary?.suites?.passed || 0} ok · ${index.summary?.suites?.failed || 0} falha`}
+          tone={(index.summary?.suites?.failed || 0) > 0 ? 'danger' : 'success'}
+          styles={styles}
+        />
+        <MetricCard
+          label="Testes"
+          value={index.summary?.tests?.total}
+          description={`${index.summary?.tests?.passed || 0} ok · ${index.summary?.tests?.failed || 0} falha`}
+          tone={(index.summary?.tests?.failed || 0) > 0 ? 'danger' : 'success'}
+          styles={styles}
+        />
+        <MetricCard
+          label="Progresso"
+          value={formatPercent(index.progress)}
+          description="Índice publicado"
+          tone="idle"
+          styles={styles}
+        />
+      </View>
+
       <SmokeTabs
         activeTab={activeTab}
-        smokeCount={smokeSections.length}
-        otherCount={otherSections.length}
-        onChange={(tab) => {
-          setActiveTab(tab);
-          clearPreview();
-        }}
+        smokeCount={smokeTypes.length}
+        otherCount={otherTypes.length}
+        onChange={setActiveTab}
         styles={styles}
       />
 
-      <View style={[styles.mainGrid, isWide ? styles.mainGridWide : styles.mainGridStack]}>
-        <View style={styles.sidebarColumn}>
+      <View style={[styles.splitLayout, !isWide && styles.splitLayoutStack]}>
+        <View style={styles.splitList}>
           <Panel
-            title={activeTab === 'smoke' ? 'Smoke suites' : 'Outros tipos'}
-            subtitle={activeTab === 'smoke' ? 'Smoke com prints · índice sticky' : 'Sem print (PHPUnit e demais)'}
-            style={styles.typePanel}
-            styles={styles}
-          >
-            <TypeSectionList
-              sections={tabSections}
-              selectedType={selectedType}
-              onSelect={selectType}
-              emptyTitle="Nenhum tipo"
-              emptyDescription={activeTab === 'smoke' ? 'Nenhum smoke neste índice.' : 'Nenhum outro tipo neste índice.'}
-              Badge={Badge}
-              EmptyState={EmptyState}
-              statusTone={statusTone}
-              statusLabel={statusLabel}
-              styles={styles}
-            />
-          </Panel>
-        </View>
-
-        <View style={styles.contentColumn}>
-          <Panel
-            title={selectedType ? `${selectedType.displayName} · suites` : 'Suites'}
-            subtitle={selectedType ? 'Cards + filtros · falhas primeiro' : 'Escolha um tipo à esquerda'}
-            style={styles.tablePanel}
+            title={selectedType ? selectedType.label : 'Suites'}
+            subtitle="Cards · clique para ver prints"
             styles={styles}
           >
             <StatusFilterChips statusFilter={statusFilter} onChange={setStatusFilter} styles={styles} />
@@ -430,11 +387,9 @@ export function SmokeDashboard() {
               <EmptyState
                 title="Nenhuma suite"
                 description={
-                  !selectedType
-                    ? 'Ainda não existe relatório publicado.'
-                    : statusFilter === 'failed'
-                      ? 'Sem falhas neste tipo — veja lista completa.'
-                      : 'Este tipo ainda não publicou suites.'
+                  statusFilter === 'failed'
+                    ? 'Sem falhas neste filtro — tente Lista completa.'
+                    : 'Nenhum relatório neste tipo.'
                 }
                 compact
                 styles={styles}
@@ -443,12 +398,14 @@ export function SmokeDashboard() {
               <View style={styles.tableShell}>
                 <DefaultTable
                   data={selectedTypeSuites}
-                  initialViewMode="cards"
                   forceCardsOnCompact
+                  initialViewMode="cards"
                   onRowPress={selectSuite}
                   onRefresh={() => testsActions.loadIndex({...smokeConfig, keepCurrent: true})}
                   requestParams={{}}
-                  rowStyle={(row) => (row.suiteId === selectedSuite?.suiteId ? styles.selectedTableRow : null)}
+                  rowStyle={(row) =>
+                    row.suiteId === selectedSuite?.suiteId ? styles.selectedTableRow : null
+                  }
                   searchKey="search"
                   searchPlaceholder="Buscar suite, caminho ou status"
                   showRowActions={false}
@@ -463,12 +420,14 @@ export function SmokeDashboard() {
                     'tests.passed': 'Testes aprovados',
                     'tests.failed': 'Testes com falha',
                   }}
-                  visibleColumnsPreferenceKey="tests-playground-suites-cards"
+                  visibleColumnsPreferenceKey="tests-playground-cards-v2"
                 />
               </View>
             )}
           </Panel>
+        </View>
 
+        <View style={styles.splitDetails}>
           <SmokeSuiteDetails
             preview={preview}
             previewError={previewError}
@@ -483,5 +442,6 @@ export function SmokeDashboard() {
     </SmokeShell>
   );
 }
+
 
 export { SmokeDashboard as default };

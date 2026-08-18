@@ -176,7 +176,7 @@ export default {
     visibleColumns: {},
     configs: {
       searchKey: 'search',
-      viewMode: 'table',
+      viewMode: 'cards',
     },
     columns: buildColumns(),
     loadedAt: 0,
