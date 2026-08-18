@@ -69,7 +69,7 @@ export function sortSuitesFailedFirst(suites) {
   });
 }
 
-/** Premium thin suite card — click calls openRow so prints update on the right */
+/** Thin premium suite row — entire surface is pressable */
 export function SuiteCard({item, openRow, selected, styles, statusLabel, statusTone}) {
   const failed = item?.status === 'failed' || (item?.failedCount || 0) > 0;
   const tone = statusTone?.(item?.status) || (failed ? 'danger' : 'success');
@@ -78,7 +78,9 @@ export function SuiteCard({item, openRow, selected, styles, statusLabel, statusT
   return (
     <Pressable
       accessibilityRole="button"
-      onPress={() => openRow?.()}
+      onPress={() => {
+        if (typeof openRow === 'function') openRow();
+      }}
       style={({pressed}) => [
         styles.suiteCard,
         selected && styles.suiteCardSelected,
@@ -86,6 +88,12 @@ export function SuiteCard({item, openRow, selected, styles, statusLabel, statusT
         pressed && styles.suiteCardPressed,
       ]}
     >
+      <View
+        style={[
+          styles.suiteCardAccent,
+          failed ? styles.suiteCardAccentDanger : styles.suiteCardAccentOk,
+        ]}
+      />
       <View style={styles.suiteCardMain}>
         <Text style={styles.suiteCardTitle} numberOfLines={1}>
           {item?.displayName || item?.suitePath || 'Suite'}
@@ -113,7 +121,9 @@ export function SuiteCard({item, openRow, selected, styles, statusLabel, statusT
           </Text>
         </View>
         <Text style={styles.suiteCardCounts}>
-          {item?.failedCount || 0} falha · {item?.passedCount || 0} ok · {item?.testsCount || 0} testes
+          {(item?.failedCount || 0) > 0
+            ? `${item.failedCount} falha · ${item?.passedCount || 0}/${item?.testsCount || 0}`
+            : `${item?.passedCount || 0}/${item?.testsCount || 0} ok`}
         </Text>
       </View>
     </Pressable>

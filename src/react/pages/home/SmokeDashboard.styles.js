@@ -466,11 +466,28 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 10,
     paddingHorizontal: 14,
+    paddingLeft: 16,
     marginBottom: 6,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(148, 163, 184, 0.16)',
     backgroundColor: 'rgba(15, 23, 42, 0.72)',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+
+  suiteCardAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3,
+  },
+  suiteCardAccentDanger: {
+    backgroundColor: '#fb7185',
+  },
+  suiteCardAccentOk: {
+    backgroundColor: '#34d399',
   },
   suiteCardSelected: {
     borderColor: 'rgba(56, 189, 248, 0.55)',
@@ -532,6 +549,24 @@ const styles = StyleSheet.create({
     color: '#64748b',
     fontSize: 10,
     fontWeight: '600',
+  },
+
+  suiteListShell: {
+    gap: 10,
+    marginTop: 8,
+  },
+  suiteSearchInput: {
+    height: 40,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.22)',
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    color: '#e2e8f0',
+    paddingHorizontal: 14,
+    fontSize: 13,
+  },
+  suiteList: {
+    gap: 0,
   },
 });
 

@@ -1,8 +1,7 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {Text, TouchableOpacity, View, useWindowDimensions} from 'react-native';
+import {Text, TextInput, TouchableOpacity, View, useWindowDimensions} from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {useStore} from '@store';
-import DefaultTable from '@controleonline/ui-default/src/react/components/table/DefaultTable';
 import {
   buildSmokeTypeSections,
   EMPTY_SMOKE_INDEX,
@@ -52,6 +51,7 @@ export function SmokeDashboard() {
   const [preview, setPreview] = useState(null);
   const [previewState, setPreviewState] = useState('idle');
   const [previewError, setPreviewError] = useState(null);
+  const [suiteSearch, setSuiteSearch] = useState('');
   const previewUrlRef = useRef(null);
   const {width} = useWindowDimensions();
   const isWide = width >= 1080;
@@ -173,6 +173,22 @@ export function SmokeDashboard() {
     () => sortSuitesFailedFirst(rawSuites, statusFilter),
     [rawSuites, statusFilter],
   );
+  const filteredSuites = useMemo(() => {
+    const q = suiteSearch.trim().toLowerCase();
+    if (!q) return selectedTypeSuites;
+    return selectedTypeSuites.filter((suite) => {
+      const hay = [
+        suite?.displayName,
+        suite?.suitePath,
+        suite?.status,
+        suite?.type,
+      ]
+        .map((v) => String(v || '').toLowerCase())
+        .join(' ');
+      return hay.includes(q);
+    });
+  }, [selectedTypeSuites, suiteSearch]);
+
   const selectedSuite =
     selectedTypeSuites.find((suite) => suite.suiteId === selectedSuiteId) ?? selectedTypeSuites[0] ?? null;
 
@@ -391,7 +407,7 @@ export function SmokeDashboard() {
             styles={styles}
           >
             <StatusFilterChips statusFilter={statusFilter} onChange={setStatusFilter} styles={styles} />
-            {selectedTypeSuites.length === 0 ? (
+            {filteredSuites.length === 0 ? (
               <EmptyState
                 title="Nenhuma suite"
                 description={
@@ -403,44 +419,27 @@ export function SmokeDashboard() {
                 styles={styles}
               />
             ) : (
-              <View style={styles.tableShell}>
-                <DefaultTable
-                  data={selectedTypeSuites}
-                  forceCardsOnCompact
-                  initialViewMode="cards"
-                  onRowPress={selectSuite}
-                  renderCard={({item, openRow}) => (
+              <View style={styles.suiteListShell}>
+                <TextInput
+                  value={suiteSearch}
+                  onChangeText={setSuiteSearch}
+                  placeholder="Buscar suite, caminho ou status"
+                  placeholderTextColor="#64748b"
+                  style={styles.suiteSearchInput}
+                />
+                <View style={styles.suiteList}>
+                  {filteredSuites.map((suite) => (
                     <SuiteCard
-                      item={item}
-                      openRow={openRow}
-                      selected={item?.suiteId === selectedSuite?.suiteId}
+                      key={suite.suiteId || suite.suitePath || suite.displayName}
+                      item={suite}
+                      openRow={() => selectSuite(suite)}
+                      selected={suite.suiteId === selectedSuite?.suiteId}
                       styles={styles}
                       statusLabel={statusLabel}
                       statusTone={statusTone}
                     />
-                  )}
-                  onRefresh={() => testsActions.loadIndex({...smokeConfig, keepCurrent: true})}
-                  requestParams={{}}
-                  rowStyle={(row) =>
-                    row.suiteId === selectedSuite?.suiteId ? styles.selectedTableRow : null
-                  }
-                  searchKey="search"
-                  searchPlaceholder="Buscar suite, caminho ou status"
-                  showRowActions={false}
-                  showTotalItemsInCompactToolbar={false}
-                  storeName="tests"
-                  summary={selectedType?.summary}
-                  summaryLabels={{
-                    'suites.total': 'Suites',
-                    'suites.passed': 'Suites aprovadas',
-                    'suites.failed': 'Suites com falha',
-                    'tests.total': 'Testes',
-                    'tests.passed': 'Testes aprovados',
-                    'tests.failed': 'Testes com falha',
-                  }}
-                  visibleColumnsPreferenceKey="tests-playground-cards-v2"
-                />
-
+                  ))}
+                </View>
               </View>
             )}
           </Panel>
