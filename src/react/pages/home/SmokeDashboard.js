@@ -235,10 +235,7 @@ export function SmokeDashboard() {
 
   const hasIndex = testsState.item !== null && typeof testsState.item === 'object';
   const loading = testsState.isLoading === true && !hasIndex;
-  const error = loadingError && !hasIndex;
-  const displayStatus = selectedType?.status || index?.status || 'idle';
-
-  if (loading) {
+  const error = Boolean(loadingError) && !hasIndex;
   const displayStatus = selectedType?.status || index?.status || 'idle';
 
   if (loading) {
