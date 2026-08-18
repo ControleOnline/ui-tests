@@ -278,6 +278,70 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     textAlign: 'center',
   },
+
+  timeline: {
+    gap: 0,
+    marginTop: 6,
+  },
+  timelineItem: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: 12,
+    minHeight: 48,
+  },
+  timelineRail: {
+    width: 14,
+    alignItems: 'center',
+  },
+  timelineDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+    backgroundColor: '#38bdf8',
+    marginTop: 4,
+    borderWidth: 2,
+    borderColor: 'rgba(56, 189, 248, 0.35)',
+  },
+  timelineLine: {
+    flex: 1,
+    width: 2,
+    backgroundColor: 'rgba(148, 163, 184, 0.22)',
+    marginTop: 4,
+    marginBottom: 0,
+  },
+  timelineBody: {
+    flex: 1,
+    paddingBottom: 16,
+    gap: 8,
+  },
+  timelineLabel: {
+    color: '#e2e8f0',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  timelineMeta: {
+    color: '#94a3b8',
+    fontSize: 12,
+  },
+  timelineError: {
+    color: '#fda4af',
+    fontSize: 12,
+  },
+  timelinePlaceholder: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+  },
+  timelineImage: {
+    width: '100%',
+    height: 280,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.18)',
+    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+  },
 });
 
 export default styles;

@@ -447,18 +447,13 @@ export function SmokeDashboard() {
 
         <View style={styles.splitDetails}>
           <SmokeSuiteDetails
-            preview={preview}
-            previewError={previewError}
-            previewState={previewState}
             selectedSuite={selectedSuite}
             selectedTestIndex={selectedTestIndex}
-            onArtifactPress={(artifact) => void openArtifact(artifact)}
             onTestToggle={toggleTest}
+            loadArtifact={async (artifact) =>
+              testsActions.loadArtifact({
+                artifact,
+                ...smokeConfig,
+              })
+            }
           />
-        </View>
-      </View>
-    </SmokeShell>
-  );
-}
-
-export { SmokeDashboard as default };

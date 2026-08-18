@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {ActivityIndicator, Image, Pressable, Text, View} from 'react-native';
 import {
   getFriendlyError,
@@ -34,7 +34,7 @@ function Badge({tone, label, subtle = false}) {
   );
 }
 
-function Panel({title, subtitle, action, children, style}) {
+function Panel({title, subtitle, children, style}) {
   return (
     <View style={[styles.panel, style]}>
       <View style={styles.panelHeader}>
@@ -42,7 +42,6 @@ function Panel({title, subtitle, action, children, style}) {
           <Text style={styles.panelTitle}>{title}</Text>
           {subtitle ? <Text style={styles.panelSubtitle}>{subtitle}</Text> : null}
         </View>
-        {action}
       </View>
       {children}
     </View>
@@ -58,80 +57,105 @@ function EmptyState({title, description, compact = false}) {
   );
 }
 
-function ArtifactButton({artifact, selected, onPress}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({pressed}) => [
-        styles.artifactButton,
-        selected && styles.artifactButtonSelected,
-        pressed && styles.pressed,
-      ]}
-    >
-      <Text style={styles.artifactButtonLabel} numberOfLines={1}>
-        {artifact.label}
-      </Text>
-      <Text style={styles.artifactButtonMeta} numberOfLines={1}>
-        {artifact.kind}
-      </Text>
-    </Pressable>
-  );
-}
+/** Loads artifact blob and shows image inline (no button). */
+function TimelinePrint({artifact, loadArtifact}) {
+  const [state, setState] = useState('loading');
+  const [objectUrl, setObjectUrl] = useState('');
+  const [error, setError] = useState(null);
+  const urlRef = useRef(null);
 
-function PreviewPane({preview, previewState, previewError}) {
-  if (previewState === 'loading') {
-    return (
-      <View style={styles.previewBox}>
-        <ActivityIndicator color="#7dd3fc" />
-        <Text style={styles.previewText}>Carregando print selecionado.</Text>
-      </View>
-    );
-  }
+  useEffect(() => {
+    let cancelled = false;
 
-  if (previewState === 'error') {
-    return (
-      <View style={styles.previewBox}>
-        <Text style={styles.previewTitle}>Falha ao abrir print</Text>
-        <Text style={styles.previewText}>{getFriendlyError(previewError, 'Falha ao carregar o artifact.')}</Text>
-      </View>
-    );
-  }
+    async function run() {
+      setState('loading');
+      setError(null);
+      try {
+        if (!loadArtifact) {
+          setState('error');
+          setError(new Error('Loader de print indisponível.'));
+          return;
+        }
+        const blob = await loadArtifact(artifact);
+        if (cancelled) return;
+        const url = URL.createObjectURL(blob);
+        urlRef.current = url;
+        setObjectUrl(url);
+        setState('ready');
+      } catch (err) {
+        if (cancelled) return;
+        setError(err);
+        setState('error');
+      }
+    }
 
-  if (!preview) {
-    return (
-      <View style={styles.previewBox}>
-        <Text style={styles.previewTitle}>Pré-visualização</Text>
-        <Text style={styles.previewText}>Selecione um print para ver a imagem aqui.</Text>
-      </View>
-    );
-  }
+    void run();
 
-  if (preview.artifact.kind !== 'image') {
-    return (
-      <View style={styles.previewBox}>
-        <Text style={styles.previewTitle}>{preview.artifact.label}</Text>
-        <Text style={styles.previewText}>
-          {preview.artifact.kind} sem prévia visual direta. Abra o artefato pelo link da API.
-        </Text>
-      </View>
-    );
-  }
+    return () => {
+      cancelled = true;
+      if (urlRef.current) {
+        URL.revokeObjectURL(urlRef.current);
+        urlRef.current = null;
+      }
+    };
+  }, [artifact?.url, loadArtifact]);
+
+  const isImage = artifact?.kind === 'image' || String(artifact?.label || '').match(/screenshot|image|png|jpg/i);
 
   return (
-    <View style={styles.previewBox}>
-      <Text style={styles.previewTitle}>{preview.artifact.label}</Text>
-      <Image
-        accessibilityLabel={preview.artifact.label}
-        source={{uri: preview.objectUrl}}
-        style={styles.previewImage}
-        resizeMode="contain"
-      />
+    <View style={styles.timelineItem}>
+      <View style={styles.timelineRail}>
+        <View style={styles.timelineDot} />
+        <View style={styles.timelineLine} />
+      </View>
+      <View style={styles.timelineBody}>
+        <Text style={styles.timelineLabel}>{artifact?.label || 'Print'}</Text>
+        {state === 'loading' ? (
+          <View style={styles.timelinePlaceholder}>
+            <ActivityIndicator color="#7dd3fc" size="small" />
+            <Text style={styles.timelineMeta}>Carregando…</Text>
+          </View>
+        ) : null}
+        {state === 'error' ? (
+          <Text style={styles.timelineError}>
+            {getFriendlyError(error, 'Falha ao carregar print.')}
+          </Text>
+        ) : null}
+        {state === 'ready' && isImage && objectUrl ? (
+          <Image
+            accessibilityLabel={artifact?.label || 'screenshot'}
+            source={{uri: objectUrl}}
+            style={styles.timelineImage}
+            resizeMode="contain"
+          />
+        ) : null}
+        {state === 'ready' && !isImage ? (
+          <Text style={styles.timelineMeta}>{artifact?.kind || 'arquivo'} (sem prévia)</Text>
+        ) : null}
+      </View>
     </View>
   );
 }
 
-function StepCard({step, onArtifactPress}) {
+function PrintTimeline({artifacts, loadArtifact}) {
+  if (!artifacts.length) {
+    return <Text style={styles.sectionEmptyText}>Este teste não trouxe prints.</Text>;
+  }
+
+  return (
+    <View style={styles.timeline}>
+      {artifacts.map((artifact, index) => (
+        <TimelinePrint
+          key={`${artifact.url || artifact.label}-${index}`}
+          artifact={artifact}
+          loadArtifact={loadArtifact}
+        />
+      ))}
+    </View>
+  );
+}
+
+function StepCard({step, loadArtifact}) {
   const screenshots = Array.isArray(step.screenshots) ? step.screenshots : [];
 
   return (
@@ -144,33 +168,15 @@ function StepCard({step, onArtifactPress}) {
       </View>
       {step.error ? <Text style={styles.stepError}>{step.error}</Text> : null}
       {screenshots.length > 0 ? (
-        <View style={styles.artifactRow}>
-          {screenshots.map((artifact) => (
-            <ArtifactButton
-              key={`${artifact.url}-${artifact.label}`}
-              artifact={artifact}
-              onPress={() => onArtifactPress(artifact)}
-            />
-          ))}
-        </View>
+        <PrintTimeline artifacts={screenshots} loadArtifact={loadArtifact} />
       ) : null}
     </View>
   );
 }
 
-function TestAccordion({
-  test,
-  expanded,
-  onToggle,
-  onArtifactPress,
-  preview,
-  previewState,
-  previewError,
-}) {
+function TestAccordion({test, expanded, onToggle, loadArtifact}) {
   const artifacts = listTestArtifacts(test);
-  const isEmpty = artifacts.length === 0;
   const stepCount = Array.isArray(test.steps) ? test.steps.length : 0;
-  const selectedPreviewUrl = preview?.artifact?.url ?? null;
 
   return (
     <View style={[styles.testCard, expanded && styles.testCardSelected]}>
@@ -197,58 +203,35 @@ function TestAccordion({
 
           <View style={styles.sectionBlock}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Prints</Text>
+              <Text style={styles.sectionTitle}>Linha do tempo</Text>
               <Text style={styles.sectionHint}>
-                {isEmpty ? 'Nenhum print anexado' : 'Clique em um print para abrir a imagem'}
+                {artifacts.length
+                  ? `${artifacts.length} print${artifacts.length === 1 ? '' : 's'}`
+                  : 'Sem prints'}
               </Text>
             </View>
-            {isEmpty ? (
-              <Text style={styles.sectionEmptyText}>Este teste não trouxe prints para exibir.</Text>
-            ) : (
-              <View style={styles.artifactRow}>
-                {artifacts.map((artifact) => (
-                  <ArtifactButton
-                    key={`${artifact.url}-${artifact.label}`}
-                    artifact={artifact}
-                    selected={selectedPreviewUrl === artifact.url}
-                    onPress={() => onArtifactPress(artifact)}
-                  />
-                ))}
+            <PrintTimeline artifacts={artifacts} loadArtifact={loadArtifact} />
+          </View>
+
+          {stepCount > 0 ? (
+            <View style={styles.sectionBlock}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionTitle}>Etapas</Text>
+                <Text style={styles.sectionHint}>
+                  {stepCount} etapa{stepCount === 1 ? '' : 's'}
+                </Text>
               </View>
-            )}
-          </View>
-
-          <View style={styles.previewSection}>
-            <PreviewPane
-              preview={preview}
-              previewState={previewState}
-              previewError={previewError}
-            />
-          </View>
-
-          <View style={styles.sectionBlock}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Etapas</Text>
-              <Text style={styles.sectionHint}>
-                {stepCount > 0 ? `${stepCount} etapa${stepCount === 1 ? '' : 's'}` : 'Sem etapas detalhadas'}
-              </Text>
-            </View>
-            <View style={styles.stepList}>
-              {stepCount > 0 ? (
-                test.steps.map((step, index) => (
+              <View style={styles.stepList}>
+                {test.steps.map((step, index) => (
                   <StepCard
                     key={`${test.title}-${step.title}-${index}`}
                     step={step}
-                    onArtifactPress={onArtifactPress}
+                    loadArtifact={loadArtifact}
                   />
-                ))
-              ) : (
-                <Text style={styles.sectionEmptyText}>
-                  O relatório não trouxe etapas detalhadas para este teste.
-                </Text>
-              )}
+                ))}
+              </View>
             </View>
-          </View>
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -256,52 +239,40 @@ function TestAccordion({
 }
 
 export default function SmokeSuiteDetails({
-  preview,
-  previewState,
-  previewError,
   selectedSuite,
   selectedTestIndex,
-  onArtifactPress,
   onTestToggle,
+  loadArtifact,
 }) {
-  if (!selectedSuite || Array.isArray(selectedSuite.tests) === false || selectedSuite.tests.length === 0) {
+  if (!selectedSuite) {
     return (
-      <Panel
-        title={selectedSuite ? selectedSuite.displayName : 'Detalhes'}
-        subtitle={
-          selectedSuite
-            ? `${selectedSuite.typeDisplayName || selectedSuite.type} · sem testes publicados`
-            : 'Escolha uma suite para ver os testes.'
-        }
-        style={styles.detailPanel}
-      >
+      <Panel title="Detalhes" subtitle="Selecione uma suite à esquerda" style={styles.detailPanel}>
         <EmptyState
-          title="Sem testes"
-          description="A suite selecionada ainda não tem itens para mostrar."
+          title="Nenhuma suite selecionada"
+          description="Clique em um card à esquerda para ver prints e etapas."
           compact
         />
       </Panel>
     );
   }
 
+  const tests = Array.isArray(selectedSuite.tests) ? selectedSuite.tests : [];
+
   return (
     <Panel
       title={selectedSuite.displayName}
-      subtitle={`${selectedSuite.typeDisplayName || selectedSuite.type} · ${selectedSuite.testsCount} teste${selectedSuite.testsCount === 1 ? '' : 's'} · ${selectedSuite.failedCount} falha${selectedSuite.failedCount === 1 ? '' : 's'}`}
+      subtitle={`${selectedSuite.typeDisplayName || selectedSuite.type} · ${selectedSuite.testsCount || tests.length} teste(s) · ${selectedSuite.failedCount || 0} falha(s)`}
       style={styles.detailPanel}
     >
       <View style={styles.detailContent}>
         <View style={styles.testList}>
-          {selectedSuite.tests.map((test, index) => (
+          {tests.map((test, index) => (
             <TestAccordion
               key={`${selectedSuite.suiteId}-${test.title}-${index}`}
               test={test}
               expanded={selectedTestIndex === index}
-              onArtifactPress={onArtifactPress}
               onToggle={() => onTestToggle(index)}
-              preview={preview}
-              previewState={previewState}
-              previewError={previewError}
+              loadArtifact={loadArtifact}
             />
           ))}
         </View>
