@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {Text, TextInput, TouchableOpacity, View, useWindowDimensions} from 'react-native';
+import {Pressable, Text, TextInput, TouchableOpacity, View, useWindowDimensions} from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {useStore} from '@store';
 import {
@@ -399,61 +399,119 @@ export function SmokeDashboard() {
         styles={styles}
       />
 
-      <View style={[styles.splitLayout, !isWide && styles.splitLayoutStack]}>
-        <View style={styles.splitList}>
-          <Panel
-            title={selectedType ? selectedType.label : 'Suites'}
-            subtitle="Cards · clique para ver prints"
-            styles={styles}
-          >
-            <StatusFilterChips statusFilter={statusFilter} onChange={setStatusFilter} styles={styles} />
-            {filteredSuites.length === 0 ? (
-              <EmptyState
-                title="Nenhuma suite"
-                description={
-                  statusFilter === 'failed'
-                    ? 'Sem falhas neste filtro — tente Lista completa.'
-                    : 'Nenhum relatório neste tipo.'
-                }
-                compact
-                styles={styles}
-              />
-            ) : (
-              <View style={styles.suiteListShell}>
-                <TextInput
-                  value={suiteSearch}
-                  onChangeText={setSuiteSearch}
-                  placeholder="Buscar suite, caminho ou status"
-                  placeholderTextColor="#64748b"
-                  style={styles.suiteSearchInput}
-                />
-                <View style={styles.suiteList}>
-                  {filteredSuites.map((suite) => (
-                    <SuiteCard
-                      key={suite.suiteId || suite.suitePath || suite.displayName}
-                      item={suite}
-                      openRow={() => selectSuite(suite)}
-                      selected={suite.suiteId === selectedSuite?.suiteId}
-                      styles={styles}
-                      statusLabel={statusLabel}
-                      statusTone={statusTone}
-                    />
-                  ))}
-                </View>
-              </View>
-            )}
-          </Panel>
+      <View style={styles.accordionShell}>
+        <View style={styles.accordionToolbar}>
+          <StatusFilterChips statusFilter={statusFilter} onChange={setStatusFilter} styles={styles} />
+          <TextInput
+            value={suiteSearch}
+            onChangeText={setSuiteSearch}
+            placeholder="Buscar suite, caminho ou status"
+            placeholderTextColor="#64748b"
+            style={styles.suiteSearchInput}
+          />
         </View>
 
-        <View style={styles.splitDetails}>
-          <SmokeSuiteDetails
-            selectedSuite={selectedSuite}
-            selectedTestIndex={selectedTestIndex}
-            onTestToggle={toggleTest}
-            loadArtifact={async (artifact) =>
-              testsActions.loadArtifact({
-                artifact,
-                ...smokeConfig,
-              })
+        {filteredSuites.length === 0 ? (
+          <EmptyState
+            title="Nenhuma suite"
+            description={
+              statusFilter === 'failed'
+                ? 'Sem falhas neste filtro — tente Lista completa.'
+                : 'Nenhum relatório neste tipo.'
             }
+            compact
+            styles={styles}
           />
+        ) : (
+          <View style={styles.accordionList}>
+            {filteredSuites.map((suite) => {
+              const open = suite.suiteId === selectedSuite?.suiteId;
+              const failed = suite.status === 'failed' || (suite.failedCount || 0) > 0;
+              return (
+                <View
+                  key={suite.suiteId || suite.suitePath || suite.displayName}
+                  style={[
+                    styles.accordionItem,
+                    open && styles.accordionItemOpen,
+                    failed && styles.accordionItemFailed,
+                  ]}
+                >
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => {
+                      if (open) {
+                        setSelectedSuiteId(null);
+                      } else {
+                        selectSuite(suite);
+                      }
+                    }}
+                    style={({pressed}) => [
+                      styles.accordionHeader,
+                      pressed && styles.suiteCardPressed,
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.suiteCardAccent,
+                        failed ? styles.suiteCardAccentDanger : styles.suiteCardAccentOk,
+                      ]}
+                    />
+                    <View style={styles.suiteCardMain}>
+                      <Text style={styles.suiteCardTitle} numberOfLines={1}>
+                        {suite.displayName || suite.suitePath || 'Suite'}
+                      </Text>
+                      <Text style={styles.suiteCardPath} numberOfLines={1}>
+                        {suite.suitePath || '—'}
+                      </Text>
+                    </View>
+                    <View style={styles.suiteCardMeta}>
+                      <View
+                        style={[
+                          styles.suiteCardBadge,
+                          failed ? styles.suiteCardBadgeDanger : styles.suiteCardBadgeSuccess,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.suiteCardBadgeText,
+                            failed
+                              ? styles.suiteCardBadgeTextDanger
+                              : styles.suiteCardBadgeTextSuccess,
+                          ]}
+                        >
+                          {statusLabel(suite.status)}
+                        </Text>
+                      </View>
+                      <Text style={styles.suiteCardCounts}>
+                        {(suite.failedCount || 0) > 0
+                          ? `${suite.failedCount} falha · ${suite.passedCount || 0}/${suite.testsCount || 0}`
+                          : `${suite.passedCount || 0}/${suite.testsCount || 0} ok`}
+                      </Text>
+                      <Text style={styles.accordionChevron}>{open ? '▾' : '▸'}</Text>
+                    </View>
+                  </Pressable>
+
+                  {open ? (
+                    <View style={styles.accordionBody}>
+                      <SmokeSuiteDetails
+                        selectedSuite={suite}
+                        loadArtifact={async (artifact) =>
+                          testsActions.loadArtifact({
+                            artifact,
+                            ...smokeConfig,
+                          })
+                        }
+                      />
+                    </View>
+                  ) : null}
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </View>
+    </SmokeShell>
+  );
+}
+
+export { SmokeDashboard as default };
