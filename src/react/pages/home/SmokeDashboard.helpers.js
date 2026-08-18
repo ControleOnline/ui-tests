@@ -2,6 +2,22 @@ import Formatter from '@controleonline/ui-common/src/utils/formatter';
 
 const {formatCount, formatDateTime} = Formatter;
 
+export const EMPTY_SMOKE_INDEX = {
+  generatedAt: '',
+  status: 'idle',
+  progress: 0,
+  message: '',
+  lastRunAt: '',
+  summary: {
+    types: { total: 0, passed: 0, failed: 0 },
+    suites: { total: 0, passed: 0, failed: 0 },
+    tests: { total: 0, passed: 0, failed: 0 },
+  },
+  types: [],
+  suites: [],
+  links: {},
+};
+
 export const formatPercent = (value) =>
   Formatter.formatPercent(Math.max(0, Math.min(100, Math.round(Number(value) || 0))));
 
@@ -83,6 +99,71 @@ export function normalizeCountSummary(summary, fallback = {}) {
   };
 }
 
+function normalizeStatusValue(value, fallback = 'pending') {
+  const status = String(value || '').trim().toLowerCase();
+
+  return status || fallback;
+}
+
+function normalizeArtifactRecord(artifact) {
+  const url = String(artifact?.url || artifact?.href || '').trim();
+  const name = String(artifact?.name || '').trim();
+  const label = String(artifact?.label || name || url || 'Artefato').trim();
+  const kind = String(artifact?.kind || '').trim() || (
+    String(artifact?.mimeType || '').startsWith('image/') ? 'image' : 'artifact'
+  );
+
+  return {
+    ...artifact,
+    label,
+    name,
+    url,
+    kind,
+    mimeType: String(artifact?.mimeType || '').trim(),
+  };
+}
+
+function normalizeStepRecord(step, index = 0) {
+  return {
+    ...step,
+    title: String(step?.title || `Etapa ${index + 1}`).trim() || `Etapa ${index + 1}`,
+    status: normalizeStatusValue(step?.status),
+    error: String(step?.error || '').trim(),
+    screenshots: Array.isArray(step?.screenshots)
+      ? step.screenshots.map(normalizeArtifactRecord)
+      : [],
+  };
+}
+
+function normalizeTestRecord(test, index = 0) {
+  return {
+    ...test,
+    title: String(test?.title || `Teste ${index + 1}`).trim() || `Teste ${index + 1}`,
+    status: normalizeStatusValue(test?.status),
+    error: String(test?.error || '').trim(),
+    screenshots: Array.isArray(test?.screenshots)
+      ? test.screenshots.map(normalizeArtifactRecord)
+      : [],
+    steps: Array.isArray(test?.steps)
+      ? test.steps.map(normalizeStepRecord)
+      : [],
+  };
+}
+
+function resolveSuiteStatus(value, tests) {
+  const status = normalizeStatusValue(value, '');
+
+  if (status) {
+    return status;
+  }
+
+  if (tests.length === 0) {
+    return 'pending';
+  }
+
+  return tests.every((test) => test.status === 'passed') ? 'passed' : 'pending';
+}
+
 export function getSuiteIdentity(suite) {
   return String(
     suite?.suiteId
@@ -140,7 +221,9 @@ export function normalizeSuiteRecord(suite, fallbackType = 'browser-smoke') {
     suite?.displayName || suite?.suite || suite?.suitePath || getSuiteIdentity(suite) || 'Suite',
   ).trim() || 'Suite';
   const suiteId = getSuiteIdentity(suite) || normalizeTypeKey(displayName);
-  const tests = Array.isArray(suite?.tests) ? suite.tests : [];
+  const tests = Array.isArray(suite?.tests)
+    ? suite.tests.map(normalizeTestRecord)
+    : [];
   const failedCount = tests.reduce(
     (count, test) => count + (test?.status === 'failed' ? 1 : 0),
     0,
@@ -163,6 +246,7 @@ export function normalizeSuiteRecord(suite, fallbackType = 'browser-smoke') {
       passed: passedCount,
       failed: failedCount,
     }),
+    status: resolveSuiteStatus(suite?.status, tests),
     tests,
     testsCount: tests.length,
     passedCount,
@@ -196,7 +280,7 @@ export function normalizeTypeSection(typeEntry, fallbackSuites = []) {
   return {
     type,
     displayName: String(typeEntry?.displayName || formatTypeLabel(type)).trim() || formatTypeLabel(type),
-    status: String(typeEntry?.status || (suiteSummary.failed === 0 ? 'passed' : 'failed')),
+    status: normalizeStatusValue(typeEntry?.status, suiteSummary.failed === 0 ? 'passed' : 'failed'),
     progress: Number.isFinite(Number(typeEntry?.progress))
       ? Math.max(0, Math.min(100, Math.round(Number(typeEntry.progress))))
       : (testSummary.total > 0 ? Math.round((testSummary.passed * 100) / testSummary.total) : 0),
@@ -210,6 +294,10 @@ export function normalizeTypeSection(typeEntry, fallbackSuites = []) {
 }
 
 export function buildSmokeTypeSections(index) {
+  if (!index || typeof index !== 'object') {
+    return [];
+  }
+
   const explicitTypes = Array.isArray(index?.types) ? index.types : [];
 
   if (explicitTypes.length > 0) {
@@ -234,9 +322,9 @@ export function buildSmokeTypeSections(index) {
 }
 
 export function listTestArtifacts(test) {
-  const screenshots = Array.isArray(test?.screenshots) ? test.screenshots : [];
+  const screenshots = Array.isArray(test?.screenshots) ? test.screenshots.map(normalizeArtifactRecord) : [];
   const stepScreenshots = Array.isArray(test?.steps)
-    ? test.steps.flatMap((step) => (Array.isArray(step.screenshots) ? step.screenshots : []))
+    ? test.steps.flatMap((step) => (Array.isArray(step?.screenshots) ? step.screenshots.map(normalizeArtifactRecord) : []))
     : [];
 
   return [...screenshots, ...stepScreenshots];
