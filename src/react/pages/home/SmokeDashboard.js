@@ -440,3 +440,26 @@ export function SmokeDashboard() {
                   }}
                   visibleColumnsPreferenceKey="tests-playground-cards-v2"
                 />
+
+              </View>
+            )}
+          </Panel>
+        </View>
+
+        <View style={styles.splitDetails}>
+          <SmokeSuiteDetails
+            preview={preview}
+            previewError={previewError}
+            previewState={previewState}
+            selectedSuite={selectedSuite}
+            selectedTestIndex={selectedTestIndex}
+            onArtifactPress={(artifact) => void openArtifact(artifact)}
+            onTestToggle={toggleTest}
+          />
+        </View>
+      </View>
+    </SmokeShell>
+  );
+}
+
+export { SmokeDashboard as default };
