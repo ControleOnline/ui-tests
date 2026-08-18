@@ -458,6 +458,81 @@ const styles = StyleSheet.create({
     maxHeight: 'calc(100vh - 120px)',
     overflow: 'auto',
   },
+
+  suiteCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.16)',
+    backgroundColor: 'rgba(15, 23, 42, 0.72)',
+  },
+  suiteCardSelected: {
+    borderColor: 'rgba(56, 189, 248, 0.55)',
+    backgroundColor: 'rgba(14, 165, 233, 0.12)',
+  },
+  suiteCardFailed: {
+    borderColor: 'rgba(251, 113, 133, 0.28)',
+  },
+  suiteCardPressed: {
+    opacity: 0.85,
+  },
+  suiteCardMain: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  suiteCardTitle: {
+    color: '#f1f5f9',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.1,
+  },
+  suiteCardPath: {
+    color: '#94a3b8',
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  suiteCardMeta: {
+    alignItems: 'flex-end',
+    gap: 4,
+    flexShrink: 0,
+  },
+  suiteCardBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    backgroundColor: 'rgba(148, 163, 184, 0.18)',
+  },
+  suiteCardBadgeDanger: {
+    backgroundColor: 'rgba(244, 63, 94, 0.18)',
+  },
+  suiteCardBadgeSuccess: {
+    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+  },
+  suiteCardBadgeText: {
+    color: '#e2e8f0',
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  suiteCardBadgeTextDanger: {
+    color: '#fda4af',
+  },
+  suiteCardBadgeTextSuccess: {
+    color: '#6ee7b7',
+  },
+  suiteCardCounts: {
+    color: '#64748b',
+    fontSize: 10,
+    fontWeight: '600',
+  },
 });
 
 export default styles;

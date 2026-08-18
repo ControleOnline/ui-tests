@@ -1,111 +1,121 @@
 import React from 'react';
-import {Text, TouchableOpacity, View} from 'react-native';
+import {Pressable, Text, View} from 'react-native';
 
 export function SmokeTabs({activeTab, smokeCount, otherCount, onChange, styles}) {
   return (
-    <View style={styles.tabRow}>
-      <TouchableOpacity
+    <View style={styles.tabsRow}>
+      <Pressable
         accessibilityRole="button"
         onPress={() => onChange('smoke')}
-        style={[styles.tabButton, activeTab === 'smoke' && styles.tabButtonActive]}
+        style={[styles.tabChip, activeTab === 'smoke' && styles.tabChipActive]}
       >
-        <Text style={[styles.tabButtonLabel, activeTab === 'smoke' && styles.tabButtonLabelActive]}>
-          Smoke{smokeCount ? ` (${smokeCount})` : ''}
+        <Text style={[styles.tabChipText, activeTab === 'smoke' && styles.tabChipTextActive]}>
+          Smoke ({smokeCount})
         </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
+      </Pressable>
+      <Pressable
         accessibilityRole="button"
         onPress={() => onChange('others')}
-        style={[styles.tabButton, activeTab === 'others' && styles.tabButtonActive]}
+        style={[styles.tabChip, activeTab === 'others' && styles.tabChipActive]}
       >
-        <Text style={[styles.tabButtonLabel, activeTab === 'others' && styles.tabButtonLabelActive]}>
-          Demais testes{otherCount ? ` (${otherCount})` : ''}
+        <Text style={[styles.tabChipText, activeTab === 'others' && styles.tabChipTextActive]}>
+          Demais testes ({otherCount})
         </Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }
 
 export function StatusFilterChips({statusFilter, onChange, styles}) {
   return (
-    <View style={styles.filterChipRow}>
-      <TouchableOpacity
+    <View style={styles.filterChipsRow}>
+      <Pressable
         accessibilityRole="button"
         onPress={() => onChange('failed')}
-        style={[styles.filterChip, statusFilter === 'failed' && styles.filterChipActive]}
+        style={[styles.filterChip, statusFilter === 'failed' && styles.filterChipDanger]}
       >
-        <Text style={[styles.filterChipLabel, statusFilter === 'failed' && styles.filterChipLabelActive]}>
+        <Text
+          style={[styles.filterChipText, statusFilter === 'failed' && styles.filterChipTextActive]}
+        >
           Só falhas
         </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
+      </Pressable>
+      <Pressable
         accessibilityRole="button"
         onPress={() => onChange('all')}
         style={[styles.filterChip, statusFilter === 'all' && styles.filterChipActive]}
       >
-        <Text style={[styles.filterChipLabel, statusFilter === 'all' && styles.filterChipLabelActive]}>
+        <Text
+          style={[styles.filterChipText, statusFilter === 'all' && styles.filterChipTextActive]}
+        >
           Lista completa
         </Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }
 
-export function sortSuitesFailedFirst(suites, statusFilter) {
-  const sorted = [...(suites || [])].sort((a, b) => {
-    const aFailed = a.status === 'failed' || (a.failedCount || 0) > 0 ? 0 : 1;
-    const bFailed = b.status === 'failed' || (b.failedCount || 0) > 0 ? 0 : 1;
-    if (aFailed !== bFailed) return aFailed - bFailed;
-    return String(a.displayName || '').localeCompare(String(b.displayName || ''));
+export function isSmokeType(type) {
+  const key = String(type || '').toLowerCase();
+  return key.includes('smoke') || key.includes('browser-smoke');
+}
+
+export function sortSuitesFailedFirst(suites) {
+  return [...(suites || [])].sort((a, b) => {
+    const af = a?.status === 'failed' || (a?.failedCount || 0) > 0 ? 0 : 1;
+    const bf = b?.status === 'failed' || (b?.failedCount || 0) > 0 ? 0 : 1;
+    if (af !== bf) return af - bf;
+    return String(a?.displayName || '').localeCompare(String(b?.displayName || ''));
   });
-  if (statusFilter === 'failed') {
-    const onlyFailed = sorted.filter(
-      (suite) => suite.status === 'failed' || (suite.failedCount || 0) > 0,
-    );
-    return onlyFailed.length > 0 ? onlyFailed : sorted;
-  }
-  return sorted;
 }
 
-export function isSmokeType(typeKey) {
-  const key = String(typeKey || '');
-  return key === 'browser-smoke' || key.includes('smoke');
-}
+/** Premium thin suite card — click calls openRow so prints update on the right */
+export function SuiteCard({item, openRow, selected, styles, statusLabel, statusTone}) {
+  const failed = item?.status === 'failed' || (item?.failedCount || 0) > 0;
+  const tone = statusTone?.(item?.status) || (failed ? 'danger' : 'success');
+  const label = statusLabel?.(item?.status) || (failed ? 'Falhou' : 'Passou');
 
-
-export function TypeSectionList({sections, selectedType, onSelect, emptyTitle, emptyDescription, Badge, EmptyState, statusTone, statusLabel, styles}) {
-  if (!sections || sections.length === 0) {
-    return <EmptyState title={emptyTitle} description={emptyDescription} compact styles={styles} />;
-  }
   return (
-    <View style={styles.typeList}>
-      {sections.map((type) => (
-        <TouchableOpacity
-          key={type.type}
-          accessibilityRole="button"
-          accessibilityLabel={type.displayName}
-          onPress={() => onSelect(type)}
-          style={({pressed}) => [
-            styles.typeCard,
-            selectedType?.type === type.type && styles.typeCardSelected,
-            pressed && styles.pressed,
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => openRow?.()}
+      style={({pressed}) => [
+        styles.suiteCard,
+        selected && styles.suiteCardSelected,
+        failed && styles.suiteCardFailed,
+        pressed && styles.suiteCardPressed,
+      ]}
+    >
+      <View style={styles.suiteCardMain}>
+        <Text style={styles.suiteCardTitle} numberOfLines={1}>
+          {item?.displayName || item?.suitePath || 'Suite'}
+        </Text>
+        <Text style={styles.suiteCardPath} numberOfLines={1}>
+          {item?.suitePath || '—'}
+        </Text>
+      </View>
+      <View style={styles.suiteCardMeta}>
+        <View
+          style={[
+            styles.suiteCardBadge,
+            tone === 'danger' && styles.suiteCardBadgeDanger,
+            tone === 'success' && styles.suiteCardBadgeSuccess,
           ]}
         >
-          <View style={styles.typeCardTop}>
-            <View style={styles.typeCardHeading}>
-              <Text style={styles.typeTitle}>{type.displayName}</Text>
-              <Text style={styles.typeMeta}>
-                {type.summary.suites.total} suites · {type.summary.tests.total} testes
-              </Text>
-            </View>
-            <Badge tone={statusTone(type.status)} label={statusLabel(type.status)} styles={styles} />
-          </View>
-          <View style={styles.typeProgressTrack}>
-            <View style={[styles.typeProgressBar, {width: `${Math.max(0, Math.min(100, type.progress))}%`}]} />
-          </View>
-          <Text style={styles.typeDescription}>{type.message}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
+          <Text
+            style={[
+              styles.suiteCardBadgeText,
+              tone === 'danger' && styles.suiteCardBadgeTextDanger,
+              tone === 'success' && styles.suiteCardBadgeTextSuccess,
+            ]}
+          >
+            {label}
+          </Text>
+        </View>
+        <Text style={styles.suiteCardCounts}>
+          {item?.failedCount || 0} falha · {item?.passedCount || 0} ok · {item?.testsCount || 0} testes
+        </Text>
+      </View>
+    </Pressable>
   );
 }

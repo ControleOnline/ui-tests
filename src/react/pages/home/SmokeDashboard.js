@@ -18,6 +18,7 @@ import {
   StatusFilterChips,
   sortSuitesFailedFirst,
   isSmokeType,
+  SuiteCard,
 } from './SmokeDashboard.chrome';
 import styles from './SmokeDashboard.styles';
 
@@ -408,6 +409,16 @@ export function SmokeDashboard() {
                   forceCardsOnCompact
                   initialViewMode="cards"
                   onRowPress={selectSuite}
+                  renderCard={({item, openRow}) => (
+                    <SuiteCard
+                      item={item}
+                      openRow={openRow}
+                      selected={item?.suiteId === selectedSuite?.suiteId}
+                      styles={styles}
+                      statusLabel={statusLabel}
+                      statusTone={statusTone}
+                    />
+                  )}
                   onRefresh={() => testsActions.loadIndex({...smokeConfig, keepCurrent: true})}
                   requestParams={{}}
                   rowStyle={(row) =>
@@ -429,26 +440,3 @@ export function SmokeDashboard() {
                   }}
                   visibleColumnsPreferenceKey="tests-playground-cards-v2"
                 />
-              </View>
-            )}
-          </Panel>
-        </View>
-
-        <View style={styles.splitDetails}>
-          <SmokeSuiteDetails
-            preview={preview}
-            previewError={previewError}
-            previewState={previewState}
-            selectedSuite={selectedSuite}
-            selectedTestIndex={selectedTestIndex}
-            onArtifactPress={(artifact) => void openArtifact(artifact)}
-            onTestToggle={toggleTest}
-          />
-        </View>
-      </View>
-    </SmokeShell>
-  );
-}
-
-
-export { SmokeDashboard as default };
