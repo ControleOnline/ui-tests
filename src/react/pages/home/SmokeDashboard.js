@@ -226,6 +226,13 @@ export function SmokeDashboard() {
     clearPreview();
   }
 
+  useEffect(() => {
+    const tests = selectedSuite?.tests;
+    if (!Array.isArray(tests)) return;
+    const failedIdx = tests.findIndex((test) => test?.status === 'failed');
+    setSelectedTestIndex(failedIdx >= 0 ? failedIdx : 0);
+  }, [selectedSuite?.suiteId]);
+
   const hasIndex = testsState.item !== null && typeof testsState.item === 'object';
   const loading = testsState.isLoading === true && !hasIndex;
   const error = loadingError && !hasIndex;
