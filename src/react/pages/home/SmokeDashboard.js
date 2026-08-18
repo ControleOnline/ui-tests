@@ -62,6 +62,13 @@ export function SmokeDashboard() {
   const runError = String(testsState.runError || '');
 
   useEffect(() => {
+    void testsActions.setConfigs?.({
+      ...(typeof testsState.configs === 'object' && testsState.configs ? testsState.configs : {}),
+      viewMode: 'cards',
+    });
+  }, [testsActions]);
+
+  useEffect(() => {
     navigation.setOptions({
       title: routeTitle || 'Resultados de testes',
     });
