@@ -54,6 +54,7 @@ function buildColumns() {
     {
       sortable: true,
       name: 'displayName',
+      editable: false,
       align: 'left',
       label: 'suite',
       isIdentity: true,
@@ -65,6 +66,7 @@ function buildColumns() {
     {
       sortable: true,
       name: 'suitePath',
+      editable: false,
       align: 'left',
       label: 'caminho',
       searchable: true,
@@ -75,6 +77,7 @@ function buildColumns() {
     {
       sortable: true,
       name: 'status',
+      editable: false,
       align: 'left',
       label: 'status',
       searchable: true,
@@ -90,6 +93,7 @@ function buildColumns() {
     {
       sortable: true,
       name: 'testsCount',
+      editable: false,
       align: 'center',
       label: 'testes',
       format(value) {
@@ -99,6 +103,7 @@ function buildColumns() {
     {
       sortable: true,
       name: 'passedCount',
+      editable: false,
       align: 'center',
       label: 'passaram',
       format(value) {
@@ -108,6 +113,7 @@ function buildColumns() {
     {
       sortable: true,
       name: 'failedCount',
+      editable: false,
       align: 'center',
       label: 'falharam',
       format(value) {
@@ -117,6 +123,7 @@ function buildColumns() {
     {
       sortable: true,
       name: 'updatedAt',
+      editable: false,
       align: 'left',
       label: 'atualizado em',
       format(value) {

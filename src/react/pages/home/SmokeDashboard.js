@@ -376,8 +376,8 @@ export function SmokeDashboard() {
 
       <SmokeTabs
         activeTab={activeTab}
-        smokeCount={smokeTypes.length}
-        otherCount={otherTypes.length}
+        smokeCount={smokeSections.length}
+        otherCount={otherSections.length}
         onChange={setActiveTab}
         styles={styles}
       />
