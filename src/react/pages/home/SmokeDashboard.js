@@ -5,6 +5,7 @@ import {useStore} from '@store';
 import DefaultTable from '@controleonline/ui-default/src/react/components/table/DefaultTable';
 import {
   buildSmokeTypeSections,
+  EMPTY_SMOKE_INDEX,
   formatPercent,
   normalizeTypeKey,
   statusLabel,
@@ -45,7 +46,7 @@ export function SmokeDashboard() {
   const previewUrlRef = useRef(null);
   const {width} = useWindowDimensions();
   const isWide = width >= 1080;
-  const index = testsState.item;
+  const index = testsState.item || EMPTY_SMOKE_INDEX;
   const loadingError = String(testsState.error || '');
   const refreshing = testsState.refreshing === true;
   const runState = testsState.isSaving === true ? 'running' : 'idle';
@@ -180,8 +181,9 @@ export function SmokeDashboard() {
     clearPreview();
   }
 
-  const loading = testsState.isLoading === true && !index;
-  const error = loadingError && !index;
+  const hasIndex = testsState.item !== null && typeof testsState.item === 'object';
+  const loading = testsState.isLoading === true && !hasIndex;
+  const error = loadingError && !hasIndex;
   const displayStatus = selectedType?.status || index?.status || 'idle';
 
   if (loading) {
@@ -253,7 +255,7 @@ export function SmokeDashboard() {
             Tipos, suites, testes e prints em uma interface compacta. Clique em um tipo para filtrar as suites.
           </Text>
           <View style={styles.headerMetaRow}>
-            <Badge tone={statusTone(index.status)} label={statusLabel(index.status)} styles={styles} />
+            <Badge tone={statusTone(index?.status)} label={statusLabel(index?.status)} styles={styles} />
             <Text style={styles.headerSubtitle}>Gerado em {String(index.generatedAt || '-')}</Text>
             <Text style={styles.headerSubtitle}>Última execução {String(index.lastRunAt || '-')}</Text>
           </View>
@@ -266,23 +268,23 @@ export function SmokeDashboard() {
           <View style={styles.headerStatsRow}>
             <MetricCard
               label="Tipos"
-              value={index.summary.types.total}
-              description={`${index.summary.types.passed} passaram · ${index.summary.types.failed} falharam`}
-              tone={index.summary.types.failed > 0 ? 'danger' : 'success'}
+              value={index.summary?.types?.total}
+              description={`${index.summary?.types?.passed || 0} passaram · ${index.summary?.types?.failed || 0} falharam`}
+              tone={(index.summary?.types?.failed || 0) > 0 ? 'danger' : 'success'}
               styles={styles}
             />
             <MetricCard
               label="Suites"
-              value={index.summary.suites.total}
-              description={`${index.summary.suites.passed} passaram · ${index.summary.suites.failed} falharam`}
-              tone={index.summary.suites.failed > 0 ? 'danger' : 'success'}
+              value={index.summary?.suites?.total}
+              description={`${index.summary?.suites?.passed || 0} passaram · ${index.summary?.suites?.failed || 0} falharam`}
+              tone={(index.summary?.suites?.failed || 0) > 0 ? 'danger' : 'success'}
               styles={styles}
             />
             <MetricCard
               label="Testes"
-              value={index.summary.tests.total}
-              description={`${index.summary.tests.passed} passaram · ${index.summary.tests.failed} falharam`}
-              tone={index.summary.tests.failed > 0 ? 'danger' : 'success'}
+              value={index.summary?.tests?.total}
+              description={`${index.summary?.tests?.passed || 0} passaram · ${index.summary?.tests?.failed || 0} falharam`}
+              tone={(index.summary?.tests?.failed || 0) > 0 ? 'danger' : 'success'}
               styles={styles}
             />
             <MetricCard

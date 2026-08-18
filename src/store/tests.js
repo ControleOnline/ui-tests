@@ -1,6 +1,6 @@
 import { api as commonApi } from '@controleonline/ui-common/src/api';
 import { getSmokeApiConfig } from '../smokeConfig';
-import { formatDateTimeLabel, statusLabel } from '../react/pages/home/SmokeDashboard.helpers';
+import { EMPTY_SMOKE_INDEX, formatDateTimeLabel, statusLabel } from '../react/pages/home/SmokeDashboard.helpers';
 
 const EMPTY_SUMMARY = {
   types: { total: 0, passed: 0, failed: 0 },
@@ -35,12 +35,17 @@ function normalizeSummary(summary = {}) {
 
 function normalizeItem(item) {
   if (!item || typeof item !== 'object') {
-    return null;
+    return EMPTY_SMOKE_INDEX;
   }
 
   return {
+    ...EMPTY_SMOKE_INDEX,
     ...item,
     summary: normalizeSummary(item.summary),
+    types: Array.isArray(item.types) ? item.types : [],
+    suites: Array.isArray(item.suites) ? item.suites : [],
+    status: String(item.status || EMPTY_SMOKE_INDEX.status).trim() || EMPTY_SMOKE_INDEX.status,
+    progress: toCount(item.progress),
   };
 }
 
