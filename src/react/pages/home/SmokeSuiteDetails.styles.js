@@ -342,6 +342,51 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(148, 163, 184, 0.18)',
     backgroundColor: 'rgba(15, 23, 42, 0.9)',
   },
+
+  suiteBody: {
+    gap: 12,
+    paddingTop: 4,
+    paddingBottom: 8,
+  },
+  phaseCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.16)',
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+    padding: 14,
+    gap: 10,
+  },
+  phaseCardFailed: {
+    borderColor: 'rgba(251, 113, 133, 0.35)',
+    backgroundColor: 'rgba(127, 29, 29, 0.12)',
+  },
+  phaseHeader: {
+    gap: 4,
+  },
+  phaseTitleWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    flexWrap: 'wrap',
+  },
+  phaseTitle: {
+    color: '#f8fafc',
+    fontSize: 14,
+    fontWeight: '700',
+    flex: 1,
+    minWidth: 120,
+  },
+  phaseMeta: {
+    color: '#94a3b8',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  phaseError: {
+    color: '#fda4af',
+    fontSize: 13,
+    lineHeight: 18,
+  },
 });
 
 export default styles;

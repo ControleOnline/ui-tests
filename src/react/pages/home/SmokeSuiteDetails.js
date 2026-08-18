@@ -1,15 +1,14 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {ActivityIndicator, Image, Pressable, Text, View} from 'react-native';
+import {ActivityIndicator, Image, Text, View} from 'react-native';
 import {
   getFriendlyError,
-  joinArtifactCounts,
   listTestArtifacts,
   statusLabel,
   statusTone,
 } from './SmokeDashboard.helpers';
 import styles from './SmokeSuiteDetails.styles';
 
-function Badge({tone, label, subtle = false}) {
+function Badge({tone, label}) {
   return (
     <View
       style={[
@@ -17,7 +16,7 @@ function Badge({tone, label, subtle = false}) {
         tone === 'success' && styles.badgeSuccess,
         tone === 'danger' && styles.badgeDanger,
         tone === 'idle' && styles.badgeIdle,
-        subtle && styles.badgeSubtle,
+        styles.badgeSubtle,
       ]}
     >
       <Text
@@ -34,30 +33,6 @@ function Badge({tone, label, subtle = false}) {
   );
 }
 
-function Panel({title, subtitle, children, style}) {
-  return (
-    <View style={[styles.panel, style]}>
-      <View style={styles.panelHeader}>
-        <View style={styles.panelHeading}>
-          <Text style={styles.panelTitle}>{title}</Text>
-          {subtitle ? <Text style={styles.panelSubtitle}>{subtitle}</Text> : null}
-        </View>
-      </View>
-      {children}
-    </View>
-  );
-}
-
-function EmptyState({title, description, compact = false}) {
-  return (
-    <View style={[styles.emptyState, compact && styles.emptyStateCompact]}>
-      <Text style={styles.emptyTitle}>{title}</Text>
-      <Text style={styles.emptyDescription}>{description}</Text>
-    </View>
-  );
-}
-
-/** Loads artifact blob and shows image inline (no button). */
 function TimelinePrint({artifact, loadArtifact}) {
   const [state, setState] = useState('loading');
   const [objectUrl, setObjectUrl] = useState('');
@@ -100,7 +75,9 @@ function TimelinePrint({artifact, loadArtifact}) {
     };
   }, [artifact?.url, loadArtifact]);
 
-  const isImage = artifact?.kind === 'image' || String(artifact?.label || '').match(/screenshot|image|png|jpg/i);
+  const isImage =
+    artifact?.kind === 'image' ||
+    /screenshot|image|png|jpg|jpeg|webp/i.test(String(artifact?.label || ''));
 
   return (
     <View style={styles.timelineItem}>
@@ -139,9 +116,8 @@ function TimelinePrint({artifact, loadArtifact}) {
 
 function PrintTimeline({artifacts, loadArtifact}) {
   if (!artifacts.length) {
-    return <Text style={styles.sectionEmptyText}>Este teste não trouxe prints.</Text>;
+    return null;
   }
-
   return (
     <View style={styles.timeline}>
       {artifacts.map((artifact, index) => (
@@ -155,128 +131,90 @@ function PrintTimeline({artifacts, loadArtifact}) {
   );
 }
 
-function StepCard({step, loadArtifact}) {
-  const screenshots = Array.isArray(step.screenshots) ? step.screenshots : [];
-
-  return (
-    <View style={styles.stepCard}>
-      <View style={styles.stepCardHeader}>
-        <View style={styles.stepTitleWrap}>
-          <Text style={styles.stepTitle}>{step.title}</Text>
-          <Badge tone={statusTone(step.status)} label={statusLabel(step.status)} subtle />
-        </View>
-      </View>
-      {step.error ? <Text style={styles.stepError}>{step.error}</Text> : null}
-      {screenshots.length > 0 ? (
-        <PrintTimeline artifacts={screenshots} loadArtifact={loadArtifact} />
-      ) : null}
-    </View>
-  );
-}
-
-function TestAccordion({test, expanded, onToggle, loadArtifact}) {
+/** One test phase — always open: summary + prints + steps */
+function TestPhase({test, loadArtifact}) {
   const artifacts = listTestArtifacts(test);
-  const stepCount = Array.isArray(test.steps) ? test.steps.length : 0;
+  const steps = Array.isArray(test?.steps) ? test.steps : [];
+  const failed = test?.status === 'failed';
 
   return (
-    <View style={[styles.testCard, expanded && styles.testCardSelected]}>
-      <Pressable
-        accessibilityRole="button"
-        onPress={onToggle}
-        style={({pressed}) => [styles.testCardTop, pressed && styles.pressed]}
-      >
-        <View style={styles.testAccordionHeaderText}>
-          <View style={styles.testAccordionTitleRow}>
-            <Text style={styles.testTitle}>{test.title}</Text>
-            <Badge tone={statusTone(test.status)} label={statusLabel(test.status)} subtle />
-          </View>
-          <Text style={styles.testMeta}>
-            {joinArtifactCounts(test)} · {stepCount} passo{stepCount === 1 ? '' : 's'}
-          </Text>
+    <View style={[styles.phaseCard, failed && styles.phaseCardFailed]}>
+      <View style={styles.phaseHeader}>
+        <View style={styles.phaseTitleWrap}>
+          <Text style={styles.phaseTitle}>{test?.title || 'Teste'}</Text>
+          <Badge tone={statusTone(test?.status)} label={statusLabel(test?.status)} />
         </View>
-        <Text style={styles.testAccordionToggle}>{expanded ? 'Fechar' : 'Abrir'}</Text>
-      </Pressable>
+        <Text style={styles.phaseMeta}>
+          {artifacts.length} print{artifacts.length === 1 ? '' : 's'}
+          {steps.length ? ` · ${steps.length} etapa${steps.length === 1 ? '' : 's'}` : ''}
+        </Text>
+      </View>
 
-      {expanded ? (
-        <View style={styles.testAccordionBody}>
-          {test.error ? <Text style={styles.testError}>{test.error}</Text> : null}
+      {test?.error ? <Text style={styles.phaseError}>{test.error}</Text> : null}
 
-          <View style={styles.sectionBlock}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Linha do tempo</Text>
-              <Text style={styles.sectionHint}>
-                {artifacts.length
-                  ? `${artifacts.length} print${artifacts.length === 1 ? '' : 's'}`
-                  : 'Sem prints'}
-              </Text>
-            </View>
-            <PrintTimeline artifacts={artifacts} loadArtifact={loadArtifact} />
-          </View>
+      {artifacts.length > 0 ? (
+        <PrintTimeline artifacts={artifacts} loadArtifact={loadArtifact} />
+      ) : (
+        <Text style={styles.sectionEmptyText}>Sem prints neste teste.</Text>
+      )}
 
-          {stepCount > 0 ? (
-            <View style={styles.sectionBlock}>
-              <View style={styles.sectionHeaderRow}>
-                <Text style={styles.sectionTitle}>Etapas</Text>
-                <Text style={styles.sectionHint}>
-                  {stepCount} etapa{stepCount === 1 ? '' : 's'}
-                </Text>
+      {steps.length > 0 ? (
+        <View style={styles.stepList}>
+          {steps.map((step, index) => {
+            const shots = Array.isArray(step?.screenshots) ? step.screenshots : [];
+            return (
+              <View key={`${test?.title}-step-${index}`} style={styles.stepCard}>
+                <View style={styles.stepCardHeader}>
+                  <Text style={styles.stepTitle}>{step?.title || `Etapa ${index + 1}`}</Text>
+                  <Badge tone={statusTone(step?.status)} label={statusLabel(step?.status)} />
+                </View>
+                {step?.error ? <Text style={styles.stepError}>{step.error}</Text> : null}
+                {shots.length > 0 ? (
+                  <PrintTimeline artifacts={shots} loadArtifact={loadArtifact} />
+                ) : null}
               </View>
-              <View style={styles.stepList}>
-                {test.steps.map((step, index) => (
-                  <StepCard
-                    key={`${test.title}-${step.title}-${index}`}
-                    step={step}
-                    loadArtifact={loadArtifact}
-                  />
-                ))}
-              </View>
-            </View>
-          ) : null}
+            );
+          })}
         </View>
       ) : null}
     </View>
   );
 }
 
-export default function SmokeSuiteDetails({
-  selectedSuite,
-  selectedTestIndex,
-  onTestToggle,
-  loadArtifact,
-}) {
+/**
+ * Body of an open suite accordion: all tests already expanded as phases.
+ */
+export default function SmokeSuiteDetails({selectedSuite, loadArtifact}) {
   if (!selectedSuite) {
-    return (
-      <Panel title="Detalhes" subtitle="Selecione uma suite à esquerda" style={styles.detailPanel}>
-        <EmptyState
-          title="Nenhuma suite selecionada"
-          description="Clique em um card à esquerda para ver prints e etapas."
-          compact
-        />
-      </Panel>
-    );
+    return null;
   }
 
   const tests = Array.isArray(selectedSuite.tests) ? selectedSuite.tests : [];
 
-  return (
-    <Panel
-      title={selectedSuite.displayName}
-      subtitle={`${selectedSuite.typeDisplayName || selectedSuite.type} · ${selectedSuite.testsCount || tests.length} teste(s) · ${selectedSuite.failedCount || 0} falha(s)`}
-      style={styles.detailPanel}
-    >
-      <View style={styles.detailContent}>
-        <View style={styles.testList}>
-          {tests.map((test, index) => (
-            <TestAccordion
-              key={`${selectedSuite.suiteId}-${test.title}-${index}`}
-              test={test}
-              expanded={selectedTestIndex === index}
-              onToggle={() => onTestToggle(index)}
-              loadArtifact={loadArtifact}
-            />
-          ))}
-        </View>
+  if (tests.length === 0) {
+    return (
+      <View style={styles.suiteBody}>
+        <Text style={styles.sectionEmptyText}>Esta suite não publicou testes.</Text>
       </View>
-    </Panel>
+    );
+  }
+
+  // Failed tests first for scanability
+  const ordered = [...tests].sort((a, b) => {
+    const af = a?.status === 'failed' ? 0 : 1;
+    const bf = b?.status === 'failed' ? 0 : 1;
+    return af - bf;
+  });
+
+  return (
+    <View style={styles.suiteBody}>
+      {ordered.map((test, index) => (
+        <TestPhase
+          key={`${selectedSuite.suiteId}-${test?.title}-${index}`}
+          test={test}
+          loadArtifact={loadArtifact}
+        />
+      ))}
+    </View>
   );
 }

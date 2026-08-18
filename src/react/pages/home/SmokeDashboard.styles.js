@@ -568,6 +568,52 @@ const styles = StyleSheet.create({
   suiteList: {
     gap: 0,
   },
+
+  accordionShell: {
+    gap: 12,
+    width: '100%',
+  },
+  accordionToolbar: {
+    gap: 10,
+  },
+  accordionList: {
+    gap: 8,
+  },
+  accordionItem: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.16)',
+    backgroundColor: 'rgba(15, 23, 42, 0.72)',
+    overflow: 'hidden',
+  },
+  accordionItemOpen: {
+    borderColor: 'rgba(56, 189, 248, 0.45)',
+  },
+  accordionItemFailed: {
+    borderColor: 'rgba(251, 113, 133, 0.28)',
+  },
+  accordionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingLeft: 16,
+    position: 'relative',
+  },
+  accordionBody: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(148, 163, 184, 0.12)',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(2, 6, 23, 0.35)',
+  },
+  accordionChevron: {
+    color: '#94a3b8',
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 2,
+  },
 });
 
 export default styles;
