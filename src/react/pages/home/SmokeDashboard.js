@@ -13,6 +13,13 @@ import {
 } from './SmokeDashboard.helpers';
 import {Badge, EmptyState, MetricCard, Panel, SmokeShell} from './SmokeDashboard.parts';
 import SmokeSuiteDetails from './SmokeSuiteDetails';
+import {
+  SmokeTabs,
+  StatusFilterChips,
+  sortSuitesFailedFirst,
+  isSmokeType,
+  TypeSectionList,
+} from './SmokeDashboard.chrome';
 import styles from './SmokeDashboard.styles';
 
 export function SmokeDashboard() {
@@ -40,6 +47,8 @@ export function SmokeDashboard() {
   const [selectedTypeKey, setSelectedTypeKey] = useState(null);
   const [selectedSuiteId, setSelectedSuiteId] = useState(null);
   const [selectedTestIndex, setSelectedTestIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState('smoke'); // smoke | others
+  const [statusFilter, setStatusFilter] = useState('failed'); // failed | all
   const [preview, setPreview] = useState(null);
   const [previewState, setPreviewState] = useState('idle');
   const [previewError, setPreviewError] = useState(null);
@@ -85,17 +94,45 @@ export function SmokeDashboard() {
 
   const typeSections = useMemo(() => buildSmokeTypeSections(index), [index]);
 
+  const smokeSections = useMemo(
+    () => typeSections.filter((section) => isSmokeType(section.type)),
+    [typeSections],
+  );
+  const otherSections = useMemo(
+    () => typeSections.filter((section) => !isSmokeType(section.type)),
+    [typeSections],
+  );
+  const tabSections = activeTab === 'smoke' ? smokeSections : otherSections;
+
+  const hasAnyFailures = useMemo(
+    () => typeSections.some((section) => (section.summary?.tests?.failed || 0) > 0 || section.status === 'failed'),
+    [typeSections],
+  );
+
   useEffect(() => {
-    if (typeSections.length === 0) {
+    // Prefer smoke tab when it has data; otherwise others.
+    if (smokeSections.length === 0 && otherSections.length > 0 && activeTab === 'smoke') {
+      setActiveTab('others');
+    }
+  }, [activeTab, otherSections.length, smokeSections.length]);
+
+  useEffect(() => {
+    // Default to failed-only when there are failures; otherwise show all.
+    setStatusFilter(hasAnyFailures ? 'failed' : 'all');
+  }, [hasAnyFailures, index?.generatedAt]);
+
+  useEffect(() => {
+    const sectionsForTab = tabSections.length > 0 ? tabSections : typeSections;
+    if (sectionsForTab.length === 0) {
       setSelectedTypeKey(null);
       setSelectedSuiteId(null);
       setSelectedTestIndex(0);
       return;
     }
 
-    const nextType = typeSections.some((type) => type.type === selectedTypeKey)
-      ? typeSections.find((type) => type.type === selectedTypeKey)
-      : typeSections[0];
+    const nextType = sectionsForTab.some((type) => type.type === selectedTypeKey)
+      ? sectionsForTab.find((type) => type.type === selectedTypeKey)
+      : sectionsForTab[0];
 
     if ((nextType?.type ?? null) !== selectedTypeKey) {
       setSelectedTypeKey(nextType?.type ?? null);
@@ -116,13 +153,21 @@ export function SmokeDashboard() {
     if (currentSuite && selectedTestIndex >= currentSuite.tests.length) {
       setSelectedTestIndex(0);
     }
-  }, [selectedSuiteId, selectedTestIndex, selectedTypeKey, typeSections]);
+  }, [selectedSuiteId, selectedTestIndex, selectedTypeKey, tabSections, typeSections]);
 
-  const selectedType = typeSections.find((type) => type.type === selectedTypeKey) ?? typeSections[0] ?? null;
-  const selectedTypeSuites = selectedType?.suites ?? [];
+  const selectedType =
+    tabSections.find((type) => type.type === selectedTypeKey)
+    ?? typeSections.find((type) => type.type === selectedTypeKey)
+    ?? tabSections[0]
+    ?? typeSections[0]
+    ?? null;
+  const rawSuites = selectedType?.suites ?? [];
+  const selectedTypeSuites = useMemo(
+    () => sortSuitesFailedFirst(rawSuites, statusFilter),
+    [rawSuites, statusFilter],
+  );
   const selectedSuite =
     selectedTypeSuites.find((suite) => suite.suiteId === selectedSuiteId) ?? selectedTypeSuites[0] ?? null;
-  const selectedSuiteTests = selectedSuite?.tests ?? [];
 
   useEffect(() => {
     void testsActions.setTotalItems?.(selectedTypeSuites.length || 0);
@@ -184,6 +229,9 @@ export function SmokeDashboard() {
   const hasIndex = testsState.item !== null && typeof testsState.item === 'object';
   const loading = testsState.isLoading === true && !hasIndex;
   const error = loadingError && !hasIndex;
+  const displayStatus = selectedType?.status || index?.status || 'idle';
+
+  if (loading) {
   const displayStatus = selectedType?.status || index?.status || 'idle';
 
   if (loading) {
@@ -332,60 +380,58 @@ export function SmokeDashboard() {
         </View>
       </View>
 
+      <SmokeTabs
+        activeTab={activeTab}
+        smokeCount={smokeSections.length}
+        otherCount={otherSections.length}
+        onChange={(tab) => {
+          setActiveTab(tab);
+          clearPreview();
+        }}
+        styles={styles}
+      />
+
       <View style={[styles.mainGrid, isWide ? styles.mainGridWide : styles.mainGridStack]}>
         <View style={styles.sidebarColumn}>
-          <Panel title="Tipos de teste" subtitle="Browser smoke, PHPUnit e outros resultados publicados." style={styles.typePanel} styles={styles}>
-            {typeSections.length === 0 ? (
-              <EmptyState title="Nenhum tipo" description="Ainda não existe relatório publicado." compact styles={styles} />
-            ) : (
-              <View style={styles.typeList}>
-                {typeSections.map((type) => (
-                  <TouchableOpacity
-                    key={type.type}
-                    accessibilityRole="button"
-                    accessibilityLabel={type.displayName}
-                    onPress={() => selectType(type)}
-                    style={({pressed}) => [
-                      styles.typeCard,
-                      selectedType?.type === type.type && styles.typeCardSelected,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    <View style={styles.typeCardTop}>
-                      <View style={styles.typeCardHeading}>
-                        <Text style={styles.typeTitle}>{type.displayName}</Text>
-                        <Text style={styles.typeMeta}>
-                          {type.summary.suites.total} suites · {type.summary.tests.total} testes
-                        </Text>
-                      </View>
-                      <Badge tone={statusTone(type.status)} label={statusLabel(type.status)} styles={styles} />
-                    </View>
-                    <View style={styles.typeProgressTrack}>
-                      <View style={[styles.typeProgressBar, {width: `${Math.max(0, Math.min(100, type.progress))}%`}]} />
-                    </View>
-                    <Text style={styles.typeDescription}>{type.message}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
+          <Panel
+            title={activeTab === 'smoke' ? 'Smoke suites' : 'Outros tipos'}
+            subtitle={activeTab === 'smoke' ? 'Smoke com prints · índice sticky' : 'Sem print (PHPUnit e demais)'}
+            style={styles.typePanel}
+            styles={styles}
+          >
+            <TypeSectionList
+              sections={tabSections}
+              selectedType={selectedType}
+              onSelect={selectType}
+              emptyTitle="Nenhum tipo"
+              emptyDescription={activeTab === 'smoke' ? 'Nenhum smoke neste índice.' : 'Nenhum outro tipo neste índice.'}
+              Badge={Badge}
+              EmptyState={EmptyState}
+              statusTone={statusTone}
+              statusLabel={statusLabel}
+              styles={styles}
+            />
           </Panel>
         </View>
 
         <View style={styles.contentColumn}>
           <Panel
             title={selectedType ? `${selectedType.displayName} · suites` : 'Suites'}
-            subtitle={
-              selectedType
-                ? 'A listagem usa DefaultTable e conserva busca, filtros, ordenação e paginação pelo próprio componente.'
-                : 'Escolha um tipo para filtrar as suites.'
-            }
+            subtitle={selectedType ? 'Cards + filtros · falhas primeiro' : 'Escolha um tipo à esquerda'}
             style={styles.tablePanel}
             styles={styles}
           >
+            <StatusFilterChips statusFilter={statusFilter} onChange={setStatusFilter} styles={styles} />
             {selectedTypeSuites.length === 0 ? (
               <EmptyState
                 title="Nenhuma suite"
-                description={selectedType ? 'Este tipo ainda não publicou suites.' : 'Ainda não existe relatório publicado.'}
+                description={
+                  !selectedType
+                    ? 'Ainda não existe relatório publicado.'
+                    : statusFilter === 'failed'
+                      ? 'Sem falhas neste tipo — veja lista completa.'
+                      : 'Este tipo ainda não publicou suites.'
+                }
                 compact
                 styles={styles}
               />
@@ -393,7 +439,8 @@ export function SmokeDashboard() {
               <View style={styles.tableShell}>
                 <DefaultTable
                   data={selectedTypeSuites}
-                  initialViewMode="table"
+                  initialViewMode="cards"
+                  forceCardsOnCompact
                   onRowPress={selectSuite}
                   onRefresh={() => testsActions.loadIndex({...smokeConfig, keepCurrent: true})}
                   requestParams={{}}
@@ -412,7 +459,7 @@ export function SmokeDashboard() {
                     'tests.passed': 'Testes aprovados',
                     'tests.failed': 'Testes com falha',
                   }}
-                  visibleColumnsPreferenceKey="tests-playground-suites"
+                  visibleColumnsPreferenceKey="tests-playground-suites-cards"
                 />
               </View>
             )}

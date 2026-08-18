@@ -203,6 +203,63 @@ const styles = StyleSheet.create({
   sidebarColumn: {
     flex: 0.92,
     gap: 16,
+    position: 'sticky',
+    top: 16,
+    alignSelf: 'flex-start',
+    maxHeight: 'calc(100vh - 48px)',
+    overflowY: 'auto',
+  },
+  tabRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 4,
+  },
+  tabButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.22)',
+    backgroundColor: 'rgba(2, 6, 23, 0.45)',
+  },
+  tabButtonActive: {
+    borderColor: 'rgba(125, 211, 252, 0.45)',
+    backgroundColor: 'rgba(8, 47, 73, 0.45)',
+  },
+  tabButtonLabel: {
+    color: '#94a3b8',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  tabButtonLabelActive: {
+    color: '#e0f2fe',
+  },
+  filterChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 8,
+  },
+  filterChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.22)',
+    backgroundColor: 'rgba(2, 6, 23, 0.35)',
+  },
+  filterChipActive: {
+    borderColor: 'rgba(251, 113, 133, 0.55)',
+    backgroundColor: 'rgba(127, 29, 29, 0.35)',
+  },
+  filterChipLabel: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  filterChipLabelActive: {
+    color: '#fecdd3',
   },
   contentColumn: {
     flex: 1.28,
