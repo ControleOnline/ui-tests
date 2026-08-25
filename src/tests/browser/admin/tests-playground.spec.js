@@ -178,8 +178,8 @@ test.describe('tests playground browser smoke', () => {
     await page.goto('/tests-playground');
 
     await expect(page.getByText('Smoke Atlas', {exact: true})).toBeVisible({timeout: 15000});
-    await expect(page.getByText('Nenhum tipo', {exact: true})).toBeVisible();
-    await expect(page.getByText('Sem testes', {exact: true})).toBeVisible();
+    await expect(page.getByText('Nenhuma suite', {exact: true})).toBeVisible();
+    await expect(page.getByText('Nenhum relatório neste tipo.', {exact: true})).toBeVisible();
     expect(consoleErrors.join('\n')).not.toContain('Cannot read properties of null');
   });
 });
