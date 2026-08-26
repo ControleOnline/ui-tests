@@ -4,3 +4,12 @@
 - Regras transversais de qualidade, modularizacao e limites de componente vivem em `https://github.com/ControleOnline/agents-mcp/blob/master/skills/shared/code-quality.md`.
 - Quando houver detalhe especifico de implementacao, prefira comentar no codigo em ingles perto da regra.
 - Este arquivo deve ficar curto e servir apenas como ponte para as fontes oficiais.
+
+## Documentação (navegação humana)
+
+| Página | Destino |
+| --- | --- |
+| Wiki do módulo | https://github.com/ControleOnline/ui-tests/wiki |
+| Smoke helpers device-configuracao | https://github.com/ControleOnline/ui-tests/wiki/Smoke-Helpers-Device-Configuracao |
+| Catálogo de fluxos (app) | https://github.com/ControleOnline/app-community/wiki/Smoke-Test-Flows |
+| Doc canônica (app) | https://github.com/ControleOnline/app-community/wiki/Smoke-Helpers-Device-Configuracao |
