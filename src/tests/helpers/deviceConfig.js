@@ -23,7 +23,7 @@ const configLocatorForType = (page, type) => {
 
 const waitListReady = async (page) => {
   await expect(
-    page.locator('[data-testid^="device-group-"]').or(page.getByTestId('current-device-badge')),
+    page.locator('[data-testid^="device-group-"]').or(page.getByTestId('current-device-badge')).first(),
   ).toBeVisible({timeout: 20000});
 };
 
