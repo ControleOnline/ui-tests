@@ -34,9 +34,28 @@ describe('admin device smoke helpers', () => {
   it('does not invent repo credentials when env is empty', () => {
     const creds = getAdminCredentials({});
     expect(creds.hasSecrets).toBe(false);
+    expect(creds.hasApiSession).toBe(false);
     expect(creds.email).toBe('');
     expect(resolveLoginFields(creds).email).toBe(MOCK_FALLBACK_EMAIL);
     expect(resolveLoginFields(creds).source).toBe('mock-fallback');
+  });
+
+  it('builds SPA session from api-token + people id (Drive, no password)', () => {
+    const {buildSessionPayload} = require('../../helpers/smokeCredentials');
+    const creds = getAdminCredentials({
+      SMOKE_API_TOKEN: 'token-from-drive',
+      SMOKE_ADMIN_PEOPLE_ID: '7',
+      SMOKE_ADMIN_USER_ID: '7',
+      SMOKE_LIVE: '1',
+    });
+    expect(creds.hasApiSession).toBe(true);
+    expect(creds.hasSecrets).toBe(false);
+    expect(buildSessionPayload(creds)).toEqual({
+      id: 7,
+      people: 7,
+      api_key: 'token-from-drive',
+      active: 1,
+    });
   });
 
   it('declares flowchart 1 and device-configuracao manifesto', () => {

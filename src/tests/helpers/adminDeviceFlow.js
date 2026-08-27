@@ -21,19 +21,27 @@ const {getAdminCredentials, resolveLoginFields} = require('./smokeCredentials');
 
 const prepareAdminDeviceFlow = async (page, options = {}) => {
   const evidenceDir = resolveEvidenceDir(options.evidenceDir);
+  const credentials = options.credentials || getAdminCredentials();
+  const useLiveUi =
+    options.useLiveUi === true ||
+    (credentials.live && (credentials.hasSecrets || credentials.hasApiSession));
+
   const manifest = buildDeviceConfigManifest({
     generatedAt: new Date().toISOString(),
     evidenceDir,
   });
   writeManifest(evidenceDir, manifest);
 
-  const runtime = await installAdminRuntimeMock(page, {
-    apiOrigin: options.apiOrigin,
-    appVersion: options.appVersion,
-    includeTypes: options.includeTypes,
-  });
+  let runtime = null;
+  if (!useLiveUi) {
+    runtime = await installAdminRuntimeMock(page, {
+      apiOrigin: options.apiOrigin,
+      appVersion: options.appVersion,
+      includeTypes: options.includeTypes,
+    });
+  }
 
-  return {runtime, evidenceDir, manifest};
+  return {runtime, evidenceDir, manifest, credentials, useLiveUi};
 };
 
 const runAdminDeviceSetup = async (page, options = {}) => {
