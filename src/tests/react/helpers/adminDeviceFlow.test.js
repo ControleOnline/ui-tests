@@ -53,6 +53,7 @@ describe('admin device smoke helpers', () => {
       'print-salvo',
       'app-pos-aberto',
     ]);
+    expect(manifest.missingPrints).toEqual([]);
   });
 
   it('normalizes PRINT aliases and required types', () => {
