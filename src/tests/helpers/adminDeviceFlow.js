@@ -24,7 +24,8 @@ const prepareAdminDeviceFlow = async (page, options = {}) => {
   const credentials = options.credentials || getAdminCredentials();
   const useLiveUi =
     options.useLiveUi === true ||
-    (credentials.live && (credentials.hasSecrets || credentials.hasApiSession));
+    credentials.hasApiSession ||
+    (credentials.live && credentials.hasSecrets);
 
   const manifest = buildDeviceConfigManifest({
     generatedAt: new Date().toISOString(),
