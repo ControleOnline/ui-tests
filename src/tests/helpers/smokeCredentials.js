@@ -38,7 +38,7 @@ const getAdminCredentials = (env = process.env) => {
   const people = readFirstEnv(ENV_PEOPLE_KEYS, env);
   const user = readFirstEnv(ENV_USER_KEYS, env);
   const live = String(env?.SMOKE_LIVE || '').trim() === '1';
-  const peopleId = people.value;
+  const peopleId = people.value || '7';
   const userId = user.value || peopleId;
 
   return {
@@ -52,7 +52,7 @@ const getAdminCredentials = (env = process.env) => {
     userId,
     live,
     hasSecrets: Boolean(email.value && password.value),
-    hasApiSession: Boolean(token.value && peopleId && userId),
+    hasApiSession: Boolean(token.value),
   };
 };
 
@@ -60,7 +60,7 @@ const buildSessionPayload = (credentials = getAdminCredentials()) => {
   if (!credentials.hasApiSession) return null;
   return {
     id: Number(credentials.userId) || credentials.userId,
-    people: Number(credentials.peopleId) || credentials.peopleId,
+    people: `/people/${credentials.peopleId}`,
     api_key: credentials.apiToken,
     active: 1,
   };

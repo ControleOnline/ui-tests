@@ -40,7 +40,7 @@ const loginAsAdmin = async (page, options = {}) => {
     await captureStep(page, 'login', {dir: options.evidenceDir});
   }
 
-  if (credentials.live && credentials.hasApiSession && !credentials.hasSecrets) {
+  if (credentials.hasApiSession && !credentials.hasSecrets) {
     await seedAdminSession(page, credentials);
     await page.reload();
     await expect(page.getByPlaceholder('Email')).toHaveCount(0, {timeout: 20000});
