@@ -4,9 +4,9 @@ const styles = StyleSheet.create({
   panel: {
     padding: 18,
     borderRadius: 24,
-    backgroundColor: 'rgba(15, 23, 42, 0.84)',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.18)',
+    borderColor: '#E2E8F0',
     gap: 18,
   },
   panelHeader: {
@@ -20,13 +20,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   panelTitle: {
-    color: '#f8fafc',
+    color: '#0F172A',
     fontSize: 20,
     lineHeight: 24,
     fontWeight: '800',
   },
   panelSubtitle: {
-    color: '#cbd5e1',
+    color: '#475569',
     fontSize: 13,
     lineHeight: 19,
   },
@@ -43,14 +43,14 @@ const styles = StyleSheet.create({
   testCard: {
     padding: 14,
     borderRadius: 18,
-    backgroundColor: 'rgba(2, 6, 23, 0.38)',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.14)',
+    borderColor: '#E2E8F0',
     gap: 12,
   },
   testCardSelected: {
     borderColor: 'rgba(125, 211, 252, 0.30)',
-    backgroundColor: 'rgba(8, 47, 73, 0.26)',
+    backgroundColor: '#EAF7FF',
   },
   testCardTop: {
     flexDirection: 'row',
@@ -69,13 +69,13 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   testTitle: {
-    color: '#f8fafc',
+    color: '#0F172A',
     fontSize: 15,
     lineHeight: 21,
     fontWeight: '800',
   },
   testMeta: {
-    color: '#cbd5e1',
+    color: '#475569',
     fontSize: 12,
     lineHeight: 18,
   },
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   sectionTitle: {
-    color: '#e2e8f0',
+    color: '#334155',
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '800',
@@ -112,12 +112,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   sectionHint: {
-    color: '#94a3b8',
+    color: '#64748B',
     fontSize: 12,
     lineHeight: 18,
   },
   sectionEmptyText: {
-    color: '#cbd5e1',
+    color: '#475569',
     fontSize: 13,
     lineHeight: 19,
   },
@@ -130,24 +130,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 14,
-    backgroundColor: 'rgba(15, 23, 42, 0.68)',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.18)',
+    borderColor: '#E2E8F0',
     minWidth: 140,
     maxWidth: 220,
     gap: 2,
   },
   artifactButtonSelected: {
     borderColor: 'rgba(125, 211, 252, 0.38)',
-    backgroundColor: 'rgba(8, 47, 73, 0.30)',
+    backgroundColor: '#EAF7FF',
   },
   artifactButtonLabel: {
-    color: '#f8fafc',
+    color: '#0F172A',
     fontSize: 12,
     fontWeight: '700',
   },
   artifactButtonMeta: {
-    color: '#94a3b8',
+    color: '#64748B',
     fontSize: 11,
   },
   previewSection: {
@@ -157,21 +157,21 @@ const styles = StyleSheet.create({
     minHeight: 180,
     padding: 16,
     borderRadius: 18,
-    backgroundColor: 'rgba(2, 6, 23, 0.36)',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.14)',
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
   },
   previewTitle: {
-    color: '#f8fafc',
+    color: '#0F172A',
     fontSize: 14,
     fontWeight: '800',
     textAlign: 'center',
   },
   previewText: {
-    color: '#cbd5e1',
+    color: '#475569',
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
@@ -187,9 +187,9 @@ const styles = StyleSheet.create({
   stepCard: {
     padding: 12,
     borderRadius: 16,
-    backgroundColor: 'rgba(15, 23, 42, 0.72)',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.14)',
+    borderColor: '#E2E8F0',
     gap: 10,
   },
   stepCardHeader: {
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   stepTitle: {
-    color: '#f8fafc',
+    color: '#0F172A',
     fontSize: 13,
     lineHeight: 19,
     fontWeight: '700',
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     color: '#fb7185',
   },
   badgeTextIdle: {
-    color: '#cbd5e1',
+    color: '#475569',
   },
   pressed: {
     opacity: 0.82,
@@ -267,13 +267,13 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
   },
   emptyTitle: {
-    color: '#f8fafc',
+    color: '#0F172A',
     fontSize: 15,
     fontWeight: '800',
     textAlign: 'center',
   },
   emptyDescription: {
-    color: '#cbd5e1',
+    color: '#475569',
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
@@ -315,13 +315,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   timelineLabel: {
-    color: '#e2e8f0',
+    color: '#334155',
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.2,
   },
   timelineMeta: {
-    color: '#94a3b8',
+    color: '#64748B',
     fontSize: 12,
   },
   timelineError: {
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(148, 163, 184, 0.18)',
-    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+    backgroundColor: '#F8FAFC',
   },
 
   suiteBody: {
@@ -351,14 +351,14 @@ const styles = StyleSheet.create({
   phaseCard: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.16)',
-    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
     padding: 14,
     gap: 10,
   },
   phaseCardFailed: {
     borderColor: 'rgba(251, 113, 133, 0.35)',
-    backgroundColor: 'rgba(127, 29, 29, 0.12)',
+    backgroundColor: '#FEF2F2',
   },
   phaseHeader: {
     gap: 4,
@@ -371,14 +371,14 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   phaseTitle: {
-    color: '#f8fafc',
+    color: '#0F172A',
     fontSize: 14,
     fontWeight: '700',
     flex: 1,
     minWidth: 120,
   },
   phaseMeta: {
-    color: '#94a3b8',
+    color: '#64748B',
     fontSize: 11,
     fontWeight: '600',
   },
