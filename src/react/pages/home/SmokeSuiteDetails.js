@@ -34,13 +34,15 @@ function Badge({tone, label}) {
 }
 
 function TimelinePrint({artifact, loadArtifact}) {
-  const [state, setState] = useState('loading');
+  const [state, setState] = useState('idle');
   const [objectUrl, setObjectUrl] = useState('');
   const [error, setError] = useState(null);
   const urlRef = useRef(null);
+  const visibilityRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
+    let observer;
 
     async function run() {
       setState('loading');
@@ -64,10 +66,25 @@ function TimelinePrint({artifact, loadArtifact}) {
       }
     }
 
-    void run();
+    const node = visibilityRef.current;
+    if (typeof IntersectionObserver === 'undefined' || !node) {
+      void run();
+    } else {
+      observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            observer?.disconnect();
+            void run();
+          }
+        },
+        {rootMargin: '240px 0px', threshold: 0.01},
+      );
+      observer.observe(node);
+    }
 
     return () => {
       cancelled = true;
+      observer?.disconnect();
       if (urlRef.current) {
         URL.revokeObjectURL(urlRef.current);
         urlRef.current = null;
@@ -80,13 +97,16 @@ function TimelinePrint({artifact, loadArtifact}) {
     /screenshot|image|png|jpg|jpeg|webp/i.test(String(artifact?.label || ''));
 
   return (
-    <View style={styles.timelineItem}>
+    <View ref={visibilityRef} style={styles.timelineItem}>
       <View style={styles.timelineRail}>
         <View style={styles.timelineDot} />
         <View style={styles.timelineLine} />
       </View>
       <View style={styles.timelineBody}>
         <Text style={styles.timelineLabel}>{artifact?.label || 'Print'}</Text>
+        {state === 'idle' ? (
+          <Text style={styles.timelineMeta}>Print disponível para visualização.</Text>
+        ) : null}
         {state === 'loading' ? (
           <View style={styles.timelinePlaceholder}>
             <ActivityIndicator color="#7dd3fc" size="small" />
