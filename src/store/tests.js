@@ -3,9 +3,10 @@ import { getSmokeApiConfig } from '../smokeConfig';
 import { EMPTY_SMOKE_INDEX, formatDateTimeLabel, statusLabel } from '../react/pages/home/SmokeDashboard.helpers';
 
 const EMPTY_SUMMARY = {
-  types: { total: 0, passed: 0, failed: 0 },
-  suites: { total: 0, passed: 0, failed: 0 },
-  tests: { total: 0, passed: 0, failed: 0 },
+  types: { total: 0, passed: 0, failed: 0, pending: 0 },
+  suites: { total: 0, passed: 0, failed: 0, pending: 0 },
+  tests: { total: 0, passed: 0, failed: 0, pending: 0 },
+  flowcharts: { total: 0, passed: 0, failed: 0, pending: 0 },
 };
 
 let loadRequestId = 0;
@@ -18,10 +19,12 @@ function toCount(value) {
 }
 
 function normalizeCountSummary(summary = {}, fallback = EMPTY_SUMMARY.types) {
+  const pending = toCount(summary.pending ?? fallback.pending);
   return {
     total: toCount(summary.total ?? fallback.total),
     passed: toCount(summary.passed ?? fallback.passed),
     failed: toCount(summary.failed ?? fallback.failed),
+    pending,
   };
 }
 
@@ -30,6 +33,7 @@ function normalizeSummary(summary = {}) {
     types: normalizeCountSummary(summary.types, EMPTY_SUMMARY.types),
     suites: normalizeCountSummary(summary.suites, EMPTY_SUMMARY.suites),
     tests: normalizeCountSummary(summary.tests, EMPTY_SUMMARY.tests),
+    flowcharts: normalizeCountSummary(summary.flowcharts, EMPTY_SUMMARY.flowcharts),
   };
 }
 
