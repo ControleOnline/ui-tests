@@ -12,7 +12,9 @@ const {
 const configLocatorForType = (page, type) => {
   const aliases = aliasesForType(type);
   const pattern = new RegExp(aliases.join('|'), 'i');
-  return page.getByRole('button', {name: pattern});
+  // Device cards render their type as text; only the current-device action is
+  // consistently a button across the web and native layouts.
+  return page.getByText(pattern);
 };
 
 const openDeviceList = async (page, options = {}) => {
