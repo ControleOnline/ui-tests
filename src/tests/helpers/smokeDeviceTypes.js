@@ -5,7 +5,8 @@ const PRINT_TYPE_ALIASES = ['PRINT', 'PRINTER'];
 
 const typeMatchers = {
   PDV: ['PDV'],
-  DISPLAY: ['DISPLAY'],
+  // The admin screen labels the DISPLAY runtime as PPC in the web shell.
+  DISPLAY: ['DISPLAY', 'PPC'],
   PRINT: PRINT_TYPE_ALIASES,
 };
 
