@@ -18,7 +18,7 @@ const configLocatorForType = (page, type) => {
 const openDeviceList = async (page, options = {}) => {
   await page.goto(options.path || '/devices-index?store=device_config');
   await expect(
-    page.locator('[data-testid^="device-group-"]').or(page.getByTestId('current-device-badge')),
+    page.locator('[data-testid^="device-group-"]').or(page.getByTestId('current-device-badge')).first(),
   ).toBeVisible({timeout: 15000});
   if (options.screenshot !== false) {
     await captureStep(page, 'lista-devices', {dir: options.evidenceDir});
