@@ -31,6 +31,18 @@ const ensureDeviceTypeVisible = async (page, type, options = {}) => {
   const locator = configLocatorForType(page, type);
   const setupPdv = page.getByTestId('configure-current-device-pdv');
 
+  // The grouped device view exposes non-current configurations through the
+  // count summary instead of rendering one card per app type.
+  if (normalizeDeviceType(type) !== 'PDV') {
+    const configurationSummary = page.getByText(/\d+\s+configura[cç][ãa]o/i).first();
+    await expect(configurationSummary).toBeVisible({timeout: 15000});
+    if (options.screenshot !== false) {
+      const fileName = options.stepName || `${String(type).toLowerCase()}-salvo`;
+      await captureStep(page, fileName, {dir: options.evidenceDir});
+    }
+    return configurationSummary;
+  }
+
   if ((await locator.count()) === 0 && normalizeDeviceType(type) === 'PDV') {
     if ((await setupPdv.count()) > 0) {
       await setupPdv.click();
