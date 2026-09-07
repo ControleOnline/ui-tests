@@ -299,12 +299,52 @@ export function buildSmokeTypeSections(index) {
   }
 
   const explicitTypes = Array.isArray(index?.types) ? index.types : [];
+  const suites = Array.isArray(index?.suites) ? index.suites : [];
 
   if (explicitTypes.length > 0) {
-    return explicitTypes.map((typeEntry) => normalizeTypeSection(typeEntry));
+    const suitesByType = new Map();
+
+    suites.forEach((suite) => {
+      const normalizedSuite = normalizeSuiteRecord(suite, suite?.type || 'browser-smoke');
+      const type = normalizedSuite.type;
+
+      if (!suitesByType.has(type)) {
+        suitesByType.set(type, []);
+      }
+
+      suitesByType.get(type).push(normalizedSuite);
+    });
+
+    const representedTypes = new Set();
+    const sections = explicitTypes.map((typeEntry) => {
+      const type = normalizeTypeKey(typeEntry?.type || 'browser-smoke');
+      const nestedSuites = Array.isArray(typeEntry?.suites) ? typeEntry.suites : [];
+      const publishedSuites = suitesByType.get(type) || [];
+      const knownIds = new Set(
+        nestedSuites
+          .map((suite) => getSuiteIdentity(suite))
+          .filter(Boolean),
+      );
+      const mergedSuites = [
+        ...nestedSuites,
+        ...publishedSuites.filter((suite) => !knownIds.has(suite.suiteId)),
+      ];
+
+      representedTypes.add(type);
+      return normalizeTypeSection({...typeEntry, type}, mergedSuites);
+    });
+
+    // Some publishers expose type summaries separately and keep the complete
+    // suite records only in the top-level `suites` array.
+    suitesByType.forEach((typeSuites, type) => {
+      if (!representedTypes.has(type)) {
+        sections.push(normalizeTypeSection({type}, typeSuites));
+      }
+    });
+
+    return sections;
   }
 
-  const suites = Array.isArray(index?.suites) ? index.suites : [];
   const grouped = new Map();
 
   suites.forEach((suite) => {

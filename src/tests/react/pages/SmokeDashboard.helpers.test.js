@@ -38,4 +38,23 @@ describe('SmokeDashboard helpers', () => {
       kind: 'artifact',
     });
   });
+
+  it('keeps top-level suites when type entries contain summaries only', () => {
+    const sections = buildSmokeTypeSections({
+      types: [
+        {type: 'browser-smoke', summary: {suites: {total: 2}}},
+        {type: 'phpunit', summary: {suites: {total: 1}}},
+      ],
+      suites: [
+        {type: 'browser-smoke', suiteId: 'browser-1', tests: [{title: 'one'}]},
+        {type: 'browser-smoke', suiteId: 'browser-2', tests: [{title: 'two'}]},
+        {type: 'phpunit', suiteId: 'phpunit-1', tests: [{title: 'three'}]},
+      ],
+    });
+
+    expect(sections).toHaveLength(2);
+    expect(sections[0].suites).toHaveLength(2);
+    expect(sections[1].suites).toHaveLength(1);
+    expect(sections.flatMap((section) => section.suites).flatMap((suite) => suite.tests)).toHaveLength(3);
+  });
 });
