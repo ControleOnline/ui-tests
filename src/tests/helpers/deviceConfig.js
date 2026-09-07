@@ -12,13 +12,15 @@ const {
 const configLocatorForType = (page, type) => {
   const aliases = aliasesForType(type);
   const pattern = new RegExp(aliases.join('|'), 'i');
-  return page.locator('[data-testid^="device-config-"]').filter({hasText: pattern});
+  // Device cards render their type as text; only the current-device action is
+  // consistently a button across the web and native layouts.
+  return page.getByText(pattern);
 };
 
 const openDeviceList = async (page, options = {}) => {
   await page.goto(options.path || '/devices-index?store=device_config');
   await expect(
-    page.locator('[data-testid^="device-group-"]').or(page.getByTestId('current-device-badge')),
+    page.locator('[data-testid^="device-group-"]').or(page.getByTestId('current-device-badge')).first(),
   ).toBeVisible({timeout: 15000});
   if (options.screenshot !== false) {
     await captureStep(page, 'lista-devices', {dir: options.evidenceDir});
@@ -28,6 +30,18 @@ const openDeviceList = async (page, options = {}) => {
 const ensureDeviceTypeVisible = async (page, type, options = {}) => {
   const locator = configLocatorForType(page, type);
   const setupPdv = page.getByTestId('configure-current-device-pdv');
+
+  // The grouped device view exposes non-current configurations through the
+  // count summary instead of rendering one card per app type.
+  if (normalizeDeviceType(type) !== 'PDV') {
+    const configurationSummary = page.getByText(/\d+\s+configura[cç][ãa]o/i).first();
+    await expect(configurationSummary).toBeVisible({timeout: 15000});
+    if (options.screenshot !== false) {
+      const fileName = options.stepName || `${String(type).toLowerCase()}-salvo`;
+      await captureStep(page, fileName, {dir: options.evidenceDir});
+    }
+    return configurationSummary;
+  }
 
   if ((await locator.count()) === 0 && normalizeDeviceType(type) === 'PDV') {
     if ((await setupPdv.count()) > 0) {
