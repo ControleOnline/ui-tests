@@ -4,7 +4,7 @@ const styles = StyleSheet.create({
   shell: {
     flex: 1,
     minHeight: '100%',
-    backgroundColor: '#050816',
+    backgroundColor: '#F8FAFC',
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
     width: 360,
     height: 360,
     borderRadius: 999,
-    backgroundColor: 'rgba(34, 211, 238, 0.22)',
+    backgroundColor: 'rgba(14, 165, 233, 0.08)',
     opacity: 0.6,
   },
   glowTwo: {
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     width: 360,
     height: 360,
     borderRadius: 999,
-    backgroundColor: 'rgba(244, 114, 182, 0.20)',
+    backgroundColor: 'rgba(99, 102, 241, 0.06)',
     opacity: 0.55,
   },
   headerCard: {
@@ -38,8 +38,8 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.18)',
-    backgroundColor: 'rgba(15, 23, 42, 0.90)',
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
   },
   headerCardStack: {
     flexDirection: 'column',
@@ -61,31 +61,31 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   headerEyebrowText: {
-    color: '#cbd5e1',
+    color: '#64748B',
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   headerTitle: {
-    color: '#f8fafc',
+    color: '#0F172A',
     fontSize: 36,
     lineHeight: 38,
     fontWeight: '800',
   },
   headerSubtitle: {
-    color: '#cbd5e1',
+    color: '#475569',
     fontSize: 16,
     lineHeight: 24,
     maxWidth: 760,
   },
   headerMessage: {
-    color: '#e2e8f0',
+    color: '#475569',
     fontSize: 15,
     lineHeight: 23,
   },
   headerMessageError: {
-    color: '#fda4af',
+    color: '#B42318',
     fontSize: 15,
     lineHeight: 23,
   },
@@ -107,12 +107,12 @@ const styles = StyleSheet.create({
     minWidth: 220,
     padding: 16,
     borderRadius: 22,
-    backgroundColor: 'rgba(15, 23, 42, 0.78)',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.18)',
+    borderColor: '#E2E8F0',
   },
   metricLabel: {
-    color: '#94a3b8',
+    color: '#64748B',
     fontSize: 13,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   metricValue: {
     marginTop: 6,
-    color: '#f8fafc',
+    color: '#0F172A',
     fontSize: 28,
     lineHeight: 32,
     fontWeight: '800',
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   },
   metricDescription: {
     marginTop: 8,
-    color: '#cbd5e1',
+    color: '#475569',
     fontSize: 14,
     lineHeight: 20,
   },
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     minWidth: 168,
   },
   actionButtonAlt: {
-    backgroundColor: '#0f172a',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: 'rgba(125, 211, 252, 0.20)',
   },
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   actionButtonLabelAlt: {
-    color: '#e2e8f0',
+    color: '#334155',
   },
   actionMessage: {
     color: '#7dd3fc',
@@ -179,16 +179,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 14,
-    backgroundColor: 'rgba(125, 211, 252, 0.10)',
+    backgroundColor: '#EAF7FF',
   },
   actionMessageError: {
-    color: '#fda4af',
+    color: '#B42318',
     fontSize: 13,
     lineHeight: 19,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 14,
-    backgroundColor: 'rgba(251, 113, 133, 0.10)',
+    backgroundColor: '#FEF2F2',
   },
   mainGrid: {
     gap: 16,
@@ -220,20 +220,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.22)',
-    backgroundColor: 'rgba(2, 6, 23, 0.45)',
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
   },
   tabButtonActive: {
     borderColor: 'rgba(125, 211, 252, 0.45)',
-    backgroundColor: 'rgba(8, 47, 73, 0.45)',
+    backgroundColor: '#EAF7FF',
   },
   tabButtonLabel: {
-    color: '#94a3b8',
+    color: '#64748B',
     fontSize: 13,
     fontWeight: '700',
   },
   tabButtonLabelActive: {
-    color: '#e0f2fe',
+    color: '#0369A1',
   },
   filterChipRow: {
     flexDirection: 'row',
@@ -246,20 +246,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.22)',
-    backgroundColor: 'rgba(2, 6, 23, 0.35)',
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
   },
   filterChipActive: {
     borderColor: 'rgba(251, 113, 133, 0.55)',
-    backgroundColor: 'rgba(127, 29, 29, 0.35)',
+    backgroundColor: '#FEF2F2',
   },
   filterChipLabel: {
-    color: '#cbd5e1',
+    color: '#475569',
     fontSize: 12,
     fontWeight: '700',
   },
   filterChipLabelActive: {
-    color: '#fecdd3',
+    color: '#B42318',
   },
   contentColumn: {
     flex: 1.28,
@@ -268,9 +268,9 @@ const styles = StyleSheet.create({
   panel: {
     padding: 18,
     borderRadius: 24,
-    backgroundColor: 'rgba(15, 23, 42, 0.84)',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.18)',
+    borderColor: '#E2E8F0',
     gap: 18,
   },
   panelHeader: {
@@ -284,13 +284,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   panelTitle: {
-    color: '#f8fafc',
+    color: '#0F172A',
     fontSize: 20,
     lineHeight: 24,
     fontWeight: '800',
   },
   panelSubtitle: {
-    color: '#cbd5e1',
+    color: '#475569',
     fontSize: 13,
     lineHeight: 19,
   },
@@ -303,14 +303,14 @@ const styles = StyleSheet.create({
   typeCard: {
     padding: 14,
     borderRadius: 18,
-    backgroundColor: 'rgba(2, 6, 23, 0.38)',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.14)',
+    borderColor: '#E2E8F0',
     gap: 10,
   },
   typeCardSelected: {
     borderColor: 'rgba(125, 211, 252, 0.38)',
-    backgroundColor: 'rgba(8, 47, 73, 0.28)',
+    backgroundColor: '#EAF7FF',
   },
   typeCardTop: {
     flexDirection: 'row',
@@ -323,13 +323,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   typeTitle: {
-    color: '#f8fafc',
+    color: '#0F172A',
     fontSize: 17,
     lineHeight: 22,
     fontWeight: '800',
   },
   typeMeta: {
-    color: '#94a3b8',
+    color: '#64748B',
     fontSize: 12,
     lineHeight: 18,
     fontWeight: '700',
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 999,
     overflow: 'hidden',
-    backgroundColor: 'rgba(148, 163, 184, 0.16)',
+    backgroundColor: '#E2E8F0',
   },
   typeProgressBar: {
     height: '100%',
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#7dd3fc',
   },
   typeDescription: {
-    color: '#cbd5e1',
+    color: '#475569',
     fontSize: 13,
     lineHeight: 19,
   },
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   tableHint: {
-    color: '#94a3b8',
+    color: '#64748B',
     fontSize: 13,
     lineHeight: 19,
   },
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
     color: '#fb7185',
   },
   badgeTextIdle: {
-    color: '#cbd5e1',
+    color: '#475569',
   },
   pressed: {
     opacity: 0.82,
@@ -419,13 +419,13 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
   },
   emptyTitle: {
-    color: '#f8fafc',
+    color: '#0F172A',
     fontSize: 15,
     fontWeight: '800',
     textAlign: 'center',
   },
   emptyDescription: {
-    color: '#cbd5e1',
+    color: '#475569',
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
@@ -470,8 +470,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.16)',
-    backgroundColor: 'rgba(15, 23, 42, 0.72)',
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
     overflow: 'hidden',
     position: 'relative',
   },
@@ -505,13 +505,13 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   suiteCardTitle: {
-    color: '#f1f5f9',
+    color: '#1E293B',
     fontSize: 14,
     fontWeight: '700',
     letterSpacing: 0.1,
   },
   suiteCardPath: {
-    color: '#94a3b8',
+    color: '#64748B',
     fontSize: 11,
     fontWeight: '500',
   },
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 999,
-    backgroundColor: 'rgba(148, 163, 184, 0.18)',
+    backgroundColor: '#E2E8F0',
   },
   suiteCardBadgeDanger: {
     backgroundColor: 'rgba(244, 63, 94, 0.18)',
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(16, 185, 129, 0.18)',
   },
   suiteCardBadgeText: {
-    color: '#e2e8f0',
+    color: '#334155',
     fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
     color: '#6ee7b7',
   },
   suiteCardCounts: {
-    color: '#64748b',
+    color: '#64748B',
     fontSize: 10,
     fontWeight: '600',
   },
@@ -559,9 +559,9 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.22)',
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
-    color: '#e2e8f0',
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
+    color: '#1E293B',
     paddingHorizontal: 14,
     fontSize: 13,
   },
@@ -582,8 +582,8 @@ const styles = StyleSheet.create({
   accordionItem: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.16)',
-    backgroundColor: 'rgba(15, 23, 42, 0.72)',
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
     overflow: 'hidden',
   },
   accordionItemOpen: {
@@ -603,13 +603,13 @@ const styles = StyleSheet.create({
   },
   accordionBody: {
     borderTopWidth: 1,
-    borderTopColor: 'rgba(148, 163, 184, 0.12)',
+    borderTopColor: '#E2E8F0',
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: 'rgba(2, 6, 23, 0.35)',
+    backgroundColor: '#F8FAFC',
   },
   accordionChevron: {
-    color: '#94a3b8',
+    color: '#64748B',
     fontSize: 14,
     fontWeight: '700',
     marginTop: 2,

@@ -241,21 +241,10 @@ const installAdminRuntimeMock = async (page, options = {}) => {
     }
 
     if (pathname === 'device_configs' && method === 'GET') {
-      const requestedDevice = url.searchParams.get('device.device');
-      const requestedType = url.searchParams.get('type');
-      const filtered = deviceConfigs.filter(deviceConfig => {
-        if (requestedDevice && deviceConfig.device.device !== requestedDevice) {
-          return false;
-        }
-        if (requestedType && deviceConfig.type !== requestedType) {
-          return false;
-        }
-        return true;
-      });
       return route.fulfill({
         status: 200,
         headers: jsonHeaders(),
-        body: JSON.stringify(collection(filtered)),
+        body: JSON.stringify(collection(deviceConfigs)),
       });
     }
 

@@ -9,9 +9,10 @@ export const EMPTY_SMOKE_INDEX = {
   message: '',
   lastRunAt: '',
   summary: {
-    types: { total: 0, passed: 0, failed: 0 },
-    suites: { total: 0, passed: 0, failed: 0 },
-    tests: { total: 0, passed: 0, failed: 0 },
+    types: { total: 0, passed: 0, failed: 0, pending: 0 },
+    suites: { total: 0, passed: 0, failed: 0, pending: 0 },
+    tests: { total: 0, passed: 0, failed: 0, pending: 0 },
+    flowcharts: { total: 0, passed: 0, failed: 0, pending: 0 },
   },
   types: [],
   suites: [],
@@ -90,12 +91,14 @@ export function toCount(value) {
 export function normalizeCountSummary(summary, fallback = {}) {
   const passed = toCount(summary?.passed) ?? fallback.passed ?? 0;
   const failed = toCount(summary?.failed) ?? fallback.failed ?? 0;
-  const total = toCount(summary?.total) ?? fallback.total ?? passed + failed;
+  const pending = toCount(summary?.pending) ?? fallback.pending ?? 0;
+  const total = toCount(summary?.total) ?? fallback.total ?? passed + failed + pending;
 
   return {
     total,
     passed,
     failed,
+    pending,
   };
 }
 
@@ -161,6 +164,10 @@ function resolveSuiteStatus(value, tests) {
     return 'pending';
   }
 
+  if (tests.some((test) => test.status === 'failed')) {
+    return 'failed';
+  }
+
   return tests.every((test) => test.status === 'passed') ? 'passed' : 'pending';
 }
 
@@ -178,6 +185,7 @@ export function countTestsInSuites(suites) {
   let total = 0;
   let passed = 0;
   let failed = 0;
+  let pending = 0;
 
   for (const suite of suites) {
     const tests = Array.isArray(suite.tests) ? suite.tests : [];
@@ -187,24 +195,29 @@ export function countTestsInSuites(suites) {
 
       if (test?.status === 'passed') {
         passed += 1;
-      } else {
+      } else if (test?.status === 'failed') {
         failed += 1;
+      } else {
+        pending += 1;
       }
     }
   }
 
-  return { total, passed, failed };
+  return { total, passed, failed, pending };
 }
 
 export function countSuitesByStatus(suites) {
   let passed = 0;
   let failed = 0;
+  let pending = 0;
 
   for (const suite of suites) {
     if (suite?.status === 'passed') {
       passed += 1;
-    } else {
+    } else if (suite?.status === 'failed') {
       failed += 1;
+    } else {
+      pending += 1;
     }
   }
 
@@ -212,6 +225,7 @@ export function countSuitesByStatus(suites) {
     total: suites.length,
     passed,
     failed,
+    pending,
   };
 }
 
@@ -232,6 +246,7 @@ export function normalizeSuiteRecord(suite, fallbackType = 'browser-smoke') {
     (count, test) => count + (test?.status === 'passed' ? 1 : 0),
     0,
   );
+  const pendingCount = tests.length - failedCount - passedCount;
 
   return {
     ...suite,
@@ -245,12 +260,14 @@ export function normalizeSuiteRecord(suite, fallbackType = 'browser-smoke') {
       total: tests.length,
       passed: passedCount,
       failed: failedCount,
+      pending: pendingCount,
     }),
     status: resolveSuiteStatus(suite?.status, tests),
     tests,
     testsCount: tests.length,
     passedCount,
     failedCount,
+    pendingCount,
     reportUrl: String(suite?.links?.report || suite?.reportUrl || '').trim(),
     updatedAt: String(suite?.updatedAt || suite?.generatedAt || '').trim(),
   };
