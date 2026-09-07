@@ -4,8 +4,6 @@ const {expect} = require('playwright/test');
 const {
   getAdminCredentials,
   resolveLoginFields,
-  MOCK_FALLBACK_EMAIL,
-  MOCK_FALLBACK_PASSWORD,
 } = require('./smokeCredentials');
 const {captureStep} = require('./smokeEvidence');
 
@@ -38,8 +36,6 @@ const loginAsAdmin = async (page, options = {}) => {
 };
 
 module.exports = {
-  MOCK_FALLBACK_EMAIL,
-  MOCK_FALLBACK_PASSWORD,
   resolveLoginFields,
   openLoginPage,
   loginAsAdmin,

@@ -21,9 +21,6 @@ const readFirstEnv = (keys, env = process.env) => {
   return {key: '', value: ''};
 };
 
-const MOCK_FALLBACK_EMAIL = 'admin@tenant.test';
-const MOCK_FALLBACK_PASSWORD = 'admin';
-
 const getAdminCredentials = (env = process.env) => {
   const email = readFirstEnv(ENV_EMAIL_KEYS, env);
   const password = readFirstEnv(ENV_PASSWORD_KEYS, env);
@@ -47,18 +44,14 @@ const resolveLoginFields = (credentials = getAdminCredentials()) => {
       source: 'env',
     };
   }
-  return {
-    email: MOCK_FALLBACK_EMAIL,
-    password: MOCK_FALLBACK_PASSWORD,
-    source: 'mock-fallback',
-  };
+  throw new Error(
+    'Real smoke credentials are required. Set SMOKE_ADMIN_EMAIL and SMOKE_ADMIN_PASSWORD (or the supported aliases).',
+  );
 };
 
 module.exports = {
   ENV_EMAIL_KEYS,
   ENV_PASSWORD_KEYS,
-  MOCK_FALLBACK_EMAIL,
-  MOCK_FALLBACK_PASSWORD,
   getAdminCredentials,
   resolveLoginFields,
 };
