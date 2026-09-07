@@ -1,3 +1,4 @@
+// fluxo: usuario-permissao | etapa: credenciais-reais
 const {
   getAdminCredentials,
 } = require('../../helpers/smokeCredentials');
@@ -9,7 +10,6 @@ const {
 } = require('../../helpers/smokeEvidence');
 const {
   resolveLoginFields,
-  MOCK_FALLBACK_EMAIL,
 } = require('../../helpers/smokeCredentials');
 const {
   normalizeDeviceType,
@@ -35,8 +35,9 @@ describe('admin device smoke helpers', () => {
     const creds = getAdminCredentials({});
     expect(creds.hasSecrets).toBe(false);
     expect(creds.email).toBe('');
-    expect(resolveLoginFields(creds).email).toBe(MOCK_FALLBACK_EMAIL);
-    expect(resolveLoginFields(creds).source).toBe('mock-fallback');
+    expect(() => resolveLoginFields(creds)).toThrow(
+      'Real smoke credentials are required',
+    );
   });
 
   it('declares flowchart 1 and device-configuracao manifesto', () => {
