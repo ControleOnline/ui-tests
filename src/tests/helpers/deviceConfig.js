@@ -12,7 +12,7 @@ const {
 const configLocatorForType = (page, type) => {
   const aliases = aliasesForType(type);
   const pattern = new RegExp(aliases.join('|'), 'i');
-  return page.locator('[data-testid^="device-config-"]').filter({hasText: pattern});
+  return page.getByRole('button', {name: pattern});
 };
 
 const openDeviceList = async (page, options = {}) => {
