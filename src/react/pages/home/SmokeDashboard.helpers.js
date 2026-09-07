@@ -316,12 +316,50 @@ export function buildSmokeTypeSections(index) {
   }
 
   const explicitTypes = Array.isArray(index?.types) ? index.types : [];
+  const topLevelSuites = Array.isArray(index?.suites) ? index.suites : [];
 
   if (explicitTypes.length > 0) {
-    return explicitTypes.map((typeEntry) => normalizeTypeSection(typeEntry));
+    const sections = explicitTypes.map((typeEntry) => ({
+      ...normalizeTypeSection(typeEntry),
+      _suiteIds: new Set(),
+    }));
+
+    sections.forEach((section) => {
+      section.suites.forEach((suite) => section._suiteIds.add(getSuiteIdentity(suite)));
+    });
+
+    topLevelSuites.forEach((suite) => {
+      const normalizedSuite = normalizeSuiteRecord(suite, suite?.type || 'browser-smoke');
+      const type = normalizedSuite.type;
+      let section = sections.find((candidate) => candidate.type === type);
+
+      if (!section) {
+        section = {
+          ...normalizeTypeSection({type}, [normalizedSuite]),
+          _suiteIds: new Set([getSuiteIdentity(normalizedSuite)]),
+        };
+        sections.push(section);
+        return;
+      }
+
+      const suiteId = getSuiteIdentity(normalizedSuite);
+      if (!section._suiteIds.has(suiteId)) {
+        section.suites.push(normalizedSuite);
+        section._suiteIds.add(suiteId);
+      }
+    });
+
+    return sections.map(({_suiteIds, ...section}) => ({
+      ...section,
+      summary: {
+        ...section.summary,
+        suites: countSuitesByStatus(section.suites),
+        tests: countTestsInSuites(section.suites),
+      },
+    }));
   }
 
-  const suites = Array.isArray(index?.suites) ? index.suites : [];
+  const suites = topLevelSuites;
   const grouped = new Map();
 
   suites.forEach((suite) => {

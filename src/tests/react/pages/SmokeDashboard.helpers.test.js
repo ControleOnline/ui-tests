@@ -38,4 +38,24 @@ describe('SmokeDashboard helpers', () => {
       kind: 'artifact',
     });
   });
+
+  it('merges top-level suites into typed sections without duplicates', () => {
+    const sections = buildSmokeTypeSections({
+      types: [
+        {
+          type: 'browser-smoke',
+          suites: [{suitePath: 'admin/home', tests: [{title: 'home', status: 'passed'}]}],
+        },
+      ],
+      suites: [
+        {type: 'browser-smoke', suitePath: 'admin/home', tests: [{title: 'home', status: 'passed'}]},
+        {type: 'browser-smoke', suitePath: 'admin/orders', tests: [{title: 'orders', status: 'pending'}]},
+        {type: 'phpunit', suitePath: 'unit/core', tests: [{title: 'core', status: 'passed'}]},
+      ],
+    });
+
+    expect(sections).toHaveLength(2);
+    expect(sections.find((section) => section.type === 'browser-smoke').suites).toHaveLength(2);
+    expect(sections.find((section) => section.type === 'phpunit').suites).toHaveLength(1);
+  });
 });
