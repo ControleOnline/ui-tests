@@ -15,6 +15,22 @@ const openAppTypeMenu = async (page) => {
   return trigger;
 };
 
+const waitAppSettled = async (page, selected) => {
+  await page.waitForLoadState('domcontentloaded');
+  await expect(page.getByRole('button', {name: 'Selecionar tipo de app'})).toContainText(
+    selected,
+    {timeout: 20000},
+  );
+  await page.getByText(/Carregando dispositivos/i).first().waitFor({
+    state: 'hidden',
+    timeout: 25000,
+  }).catch(() => {});
+  await page.getByText(/^Carregando/i).first().waitFor({
+    state: 'hidden',
+    timeout: 8000,
+  }).catch(() => {});
+};
+
 const switchApp = async (page, appType, options = {}) => {
   const candidates = resolveAppCandidates(appType);
   await openAppTypeMenu(page);
@@ -33,11 +49,12 @@ const switchApp = async (page, appType, options = {}) => {
     throw new Error(`App type not available in selector: ${candidates.join(', ')}`);
   }
 
-  await page.waitForLoadState('domcontentloaded');
-  await expect(page.getByRole('button', {name: 'Selecionar tipo de app'})).toContainText(
-    selected,
-    {timeout: 15000},
-  );
+  await waitAppSettled(page, selected);
+
+  if (options.leaveDevicesList !== false && /devices-index/i.test(page.url())) {
+    await page.goto('/');
+    await waitAppSettled(page, selected);
+  }
 
   if (options.screenshot !== false) {
     const stepName = options.stepName || `app-${String(selected).toLowerCase()}-aberto`;

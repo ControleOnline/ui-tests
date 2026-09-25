@@ -316,52 +316,50 @@ export function buildSmokeTypeSections(index) {
   }
 
   const explicitTypes = Array.isArray(index?.types) ? index.types : [];
-  const suites = Array.isArray(index?.suites) ? index.suites : [];
+  const topLevelSuites = Array.isArray(index?.suites) ? index.suites : [];
 
   if (explicitTypes.length > 0) {
-    const suitesByType = new Map();
+    const sections = explicitTypes.map((typeEntry) => ({
+      ...normalizeTypeSection(typeEntry),
+      _suiteIds: new Set(),
+    }));
 
-    suites.forEach((suite) => {
+    sections.forEach((section) => {
+      section.suites.forEach((suite) => section._suiteIds.add(getSuiteIdentity(suite)));
+    });
+
+    topLevelSuites.forEach((suite) => {
       const normalizedSuite = normalizeSuiteRecord(suite, suite?.type || 'browser-smoke');
       const type = normalizedSuite.type;
+      let section = sections.find((candidate) => candidate.type === type);
 
-      if (!suitesByType.has(type)) {
-        suitesByType.set(type, []);
+      if (!section) {
+        section = {
+          ...normalizeTypeSection({type}, [normalizedSuite]),
+          _suiteIds: new Set([getSuiteIdentity(normalizedSuite)]),
+        };
+        sections.push(section);
+        return;
       }
 
-      suitesByType.get(type).push(normalizedSuite);
-    });
-
-    const representedTypes = new Set();
-    const sections = explicitTypes.map((typeEntry) => {
-      const type = normalizeTypeKey(typeEntry?.type || 'browser-smoke');
-      const nestedSuites = Array.isArray(typeEntry?.suites) ? typeEntry.suites : [];
-      const publishedSuites = suitesByType.get(type) || [];
-      const knownIds = new Set(
-        nestedSuites
-          .map((suite) => getSuiteIdentity(suite))
-          .filter(Boolean),
-      );
-      const mergedSuites = [
-        ...nestedSuites,
-        ...publishedSuites.filter((suite) => !knownIds.has(suite.suiteId)),
-      ];
-
-      representedTypes.add(type);
-      return normalizeTypeSection({...typeEntry, type}, mergedSuites);
-    });
-
-    // Some publishers expose type summaries separately and keep the complete
-    // suite records only in the top-level `suites` array.
-    suitesByType.forEach((typeSuites, type) => {
-      if (!representedTypes.has(type)) {
-        sections.push(normalizeTypeSection({type}, typeSuites));
+      const suiteId = getSuiteIdentity(normalizedSuite);
+      if (!section._suiteIds.has(suiteId)) {
+        section.suites.push(normalizedSuite);
+        section._suiteIds.add(suiteId);
       }
     });
 
-    return sections;
+    return sections.map(({_suiteIds, ...section}) => ({
+      ...section,
+      summary: {
+        ...section.summary,
+        suites: countSuitesByStatus(section.suites),
+        tests: countTestsInSuites(section.suites),
+      },
+    }));
   }
 
+  const suites = topLevelSuites;
   const grouped = new Map();
 
   suites.forEach((suite) => {
