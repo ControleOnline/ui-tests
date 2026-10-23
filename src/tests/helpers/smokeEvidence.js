@@ -20,7 +20,6 @@ const buildDeviceConfigManifest = (overrides = {}) => ({
   fluxo: DEVICE_CONFIG_FLOW_ID,
   steps: DEVICE_CONFIG_STEPS,
   prints: DEVICE_CONFIG_STEPS.slice(),
-  missingPrints: [],
   ...overrides,
 });
 
