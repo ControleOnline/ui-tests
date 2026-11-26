@@ -39,6 +39,15 @@ test.describe('device-configuracao helpers', () => {
   });
 
   test('helpers de troca de app cobrem PPC e CHECKOUT', async ({page}, testInfo) => {
+    testInfo.annotations.push({
+      type: 'fluxo',
+      description: DEVICE_CONFIG_FLOW_ID,
+    });
+    testInfo.annotations.push({
+      type: 'flowchartIds',
+      description: JSON.stringify(FLOWCHART_IDS),
+    });
+
     await runAdminDeviceSetup(page, {
       apiOrigin: API_ORIGIN,
       appVersion,
